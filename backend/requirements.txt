@@ -1,0 +1,12 @@
+flask==3.1.1
+sqlalchemy==2.0.41
+flask-cors==5.0.1
+flask-jwt-extended==4.7.1
+pymysql==1.1.1
+python-dotenv==1.1.0
+statsmodels==0.14.6
+scikit-learn==1.6.1
+numpy==2.2.5
+pandas==2.2.3
+bcrypt==4.3.0
+cryptography==44.0.3
