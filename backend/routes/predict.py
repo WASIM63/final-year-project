@@ -6,7 +6,7 @@ from utils.db_queries import fetch_price_data, insert_scraped_price
 from utils.preprocess import preprocess
 from utils.model import (
     train_model, make_forecast, evaluate_model,
-    simple_trend_forecast, stochastic_forecast,
+    simple_trend_forecast, stochastic_forecast, apply_sale_events
 )
 from utils.scraper import get_full_product_data
 from db import get_db_connection
@@ -127,7 +127,8 @@ def predict():
                 index=pd.DatetimeIndex([today], name="scrape_date"),
             )
 
-            forecast_df = stochastic_forecast(current_price, list_price)
+            forecast_df = stochastic_forecast(current_price, list_price, asin)
+            forecast_df = apply_sale_events(forecast_df, current_price, list_price)
             forecast_list, historical_list, best_day, trend = _build_response_data(
                 forecast_df, df_processed, data_source
             )
@@ -172,7 +173,8 @@ def predict():
                 {"price": [last_price]},
                 index=pd.DatetimeIndex([pd.Timestamp.now().normalize()], name="scrape_date"),
             )
-            forecast_df = stochastic_forecast(last_price, list_price)
+            forecast_df = stochastic_forecast(last_price, list_price, asin)
+            forecast_df = apply_sale_events(forecast_df, last_price, list_price)
             forecast_list, historical_list, best_day, trend = _build_response_data(
                 forecast_df, df_p, data_source
             )
@@ -202,6 +204,7 @@ def predict():
         # =========================================================
         if n_points < 5:
             forecast_df = simple_trend_forecast(df_processed)
+            forecast_df = apply_sale_events(forecast_df, float(df_processed["price"].iloc[-1]), list_price)
             forecast_list, historical_list, best_day, trend = _build_response_data(
                 forecast_df, df_processed, data_source
             )
@@ -234,6 +237,7 @@ def predict():
         # =========================================================
         model = train_model(df_processed)
         forecast_df = make_forecast(model, df_processed)
+        forecast_df = apply_sale_events(forecast_df, float(df_processed["price"].iloc[-1]), list_price)
         mae, rmse = evaluate_model(df_processed)
 
         forecast_list, historical_list, best_day, trend = _build_response_data(

@@ -18,6 +18,7 @@ import {
   Database,
   Cloud,
   Sparkles,
+  Gift,
 } from "lucide-react";
 
 // Lazy load Recharts to avoid SSR issues
@@ -45,6 +46,41 @@ interface PredictionDetail {
   rmse: number;
   data_source: string | null;
   created_at: string;
+}
+
+function getUpcomingSale(forecastData: ForecastPoint[]): string | null {
+  const sale_events = [
+    { name: "Republic Day Sale", start: [1, 20], end: [1, 26] },
+    { name: "Valentine's Day Sale", start: [2, 10], end: [2, 14] },
+    { name: "Holi Sale", start: [3, 1], end: [3, 5] },
+    { name: "Eid Festive Sale", start: [3, 18], end: [3, 22] }, // Approx Eid al-Fitr 2026
+    { name: "Summer Sale", start: [5, 4], end: [5, 8] },
+    { name: "Eid al-Adha Sale", start: [5, 25], end: [5, 29] }, // Approx 2026
+    { name: "Prime Day", start: [7, 15], end: [7, 20] },
+    { name: "Independence Sale", start: [8, 8], end: [8, 15] },
+    { name: "Raksha Bandhan Sale", start: [8, 25], end: [8, 30] },
+    { name: "Great Indian Festival", start: [10, 8], end: [10, 15] },
+    { name: "Dussehra Sale", start: [10, 18], end: [10, 22] },
+    { name: "Diwali Sale", start: [11, 5], end: [11, 10] },
+    { name: "Black Friday", start: [11, 24], end: [11, 28] },
+    { name: "Year End Sale", start: [12, 25], end: [12, 31] },
+  ];
+
+  for (const point of forecastData) {
+    const d = new Date(point.date);
+    const m = d.getMonth() + 1; // getMonth() is 0-indexed
+    const day = d.getDate();
+
+    for (const sale of sale_events) {
+      const [start_m, start_d] = sale.start;
+      const [end_m, end_d] = sale.end;
+      
+      if ((m === start_m && day >= start_d) || (m === end_m && day <= end_d) || (start_m < m && m < end_m)) {
+        return sale.name;
+      }
+    }
+  }
+  return null;
 }
 
 export default function PredictionDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -288,11 +324,35 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
 
       {/* Chart */}
       <div className="animate-fade-in-up stagger-2 glass-card-static detail-chart-card" style={styles.chartCard}>
-        <h2 className="detail-section-title" style={styles.chartTitle}>
-          <BarChart3 size={20} style={{ marginRight: 8, verticalAlign: "middle" }} />
-          Price Forecast Chart
-        </h2>
-        <p style={styles.chartSub}>Historical prices (blue) vs AI-predicted prices (cyan)</p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+          <div>
+            <h2 className="detail-section-title" style={styles.chartTitle}>
+              <BarChart3 size={20} style={{ marginRight: 8, verticalAlign: "middle" }} />
+              Price Forecast Chart
+            </h2>
+            <p style={styles.chartSub}>Historical prices (blue) vs AI-predicted prices (cyan)</p>
+          </div>
+          
+          {/* Subtle Upcoming Sale Note */}
+          {prediction.forecast_data && getUpcomingSale(prediction.forecast_data) && (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 12px",
+              background: "rgba(139,92,246,0.1)",
+              border: "1px solid rgba(139,92,246,0.2)",
+              borderRadius: 20,
+              fontSize: "0.8rem",
+              color: "var(--accent-purple)",
+              fontWeight: 500,
+            }}>
+              <Gift size={14} />
+              <span>Note: Forecast adjusted for upcoming {getUpcomingSale(prediction.forecast_data)}</span>
+            </div>
+          )}
+        </div>
+        
         <div className="detail-chart-wrap" style={styles.chartWrap}>
           <ForecastChart
             historical={prediction.historical_data}

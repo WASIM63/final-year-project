@@ -11,6 +11,68 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 # ---------------------------------------------------------------------------
+#  Holiday / Sale Event Logic
+# ---------------------------------------------------------------------------
+
+def apply_sale_events(forecast_df, current_price, list_price=None):
+    """Apply expected Amazon sale discounts to the forecast curve.
+    
+    Checks if any forecasted dates fall within known major sale windows
+    and applies a realistic discount dip to the yhat and bounds.
+    """
+    sale_events = [
+        {"name": "Republic Day Sale", "start": (1, 20), "end": (1, 26), "discount": 0.08},
+        {"name": "Valentine's Day Sale", "start": (2, 10), "end": (2, 14), "discount": 0.05},
+        {"name": "Holi Sale", "start": (3, 1), "end": (3, 5), "discount": 0.06},
+        {"name": "Eid Festive Sale", "start": (3, 18), "end": (3, 22), "discount": 0.07},
+        {"name": "Summer Sale", "start": (5, 4), "end": (5, 8), "discount": 0.05},
+        {"name": "Eid al-Adha Sale", "start": (5, 25), "end": (5, 29), "discount": 0.05},
+        {"name": "Prime Day", "start": (7, 15), "end": (7, 20), "discount": 0.12},
+        {"name": "Independence Sale", "start": (8, 8), "end": (8, 15), "discount": 0.08},
+        {"name": "Raksha Bandhan Sale", "start": (8, 25), "end": (8, 30), "discount": 0.06},
+        {"name": "Great Indian Festival", "start": (10, 8), "end": (10, 15), "discount": 0.15},
+        {"name": "Dussehra Sale", "start": (10, 18), "end": (10, 22), "discount": 0.08},
+        {"name": "Diwali Sale", "start": (11, 5), "end": (11, 10), "discount": 0.12},
+        {"name": "Black Friday", "start": (11, 24), "end": (11, 28), "discount": 0.12},
+        {"name": "Year End Sale", "start": (12, 25), "end": (12, 31), "discount": 0.08},
+    ]
+
+    df = forecast_df.copy()
+    
+    for i, row in df.iterrows():
+        dt = row["ds"]
+        month, day = dt.month, dt.day
+        
+        # Check if date falls in any sale window
+        sale_discount = 0
+        for sale in sale_events:
+            start_m, start_d = sale["start"]
+            end_m, end_d = sale["end"]
+            
+            # Simple date range check (assumes sales don't cross year boundary in this list)
+            if (month == start_m and day >= start_d) or (month == end_m and day <= end_d) or (start_m < month < end_m):
+                sale_discount = sale["discount"]
+                break
+                
+        if sale_discount > 0:
+            # If deeply discounted already, don't discount much further
+            if list_price and list_price > current_price:
+                current_discount = (list_price - current_price) / list_price
+                if current_discount > 0.3: # Already >30% off, barely drop
+                    effective_discount = sale_discount * 0.2
+                else:
+                    effective_discount = sale_discount
+            else:
+                effective_discount = sale_discount
+                
+            # Apply the dip
+            df.at[i, "yhat"] = row["yhat"] * (1 - effective_discount)
+            df.at[i, "yhat_lower"] = row["yhat_lower"] * (1 - (effective_discount * 1.5))
+            df.at[i, "yhat_upper"] = row["yhat_upper"] * (1 - (effective_discount * 0.5))
+
+    return df
+
+# ---------------------------------------------------------------------------
 #  Holt-Winters (Exponential Smoothing) Model
 # ---------------------------------------------------------------------------
 
@@ -246,7 +308,7 @@ def simple_trend_forecast(df):
     })
 
 
-def stochastic_forecast(current_price, list_price=None):
+def stochastic_forecast(current_price, list_price=None, asin=None):
     """Generate a realistic 30-day price forecast from a single price point.
 
     Uses Monte Carlo simulation with:
@@ -267,8 +329,17 @@ def stochastic_forecast(current_price, list_price=None):
     # Amazon product price parameters
     # Daily volatility: ~1-2% (annualized ~15-30%, typical for consumer goods)
     daily_volatility = 0.012
-    # Slight downward drift (Amazon prices tend to decrease over time due to competition)
-    daily_drift = -0.0005
+    # Default pseudo-random drift (prices might naturally go up or down)
+    # Using ASIN to make the base trend consistent for the same product
+    if asin:
+        import hashlib
+        seed_val = int(hashlib.md5(asin.encode()).hexdigest(), 16) % 1000
+        np.random.seed(seed_val)
+        daily_drift = np.random.uniform(-0.0015, 0.0015)
+        np.random.seed(None) # Reset for simulation
+    else:
+        daily_drift = np.random.choice([-0.001, 0.001])
+
     # Mean reversion speed
     mean_reversion = 0.03
 
@@ -277,8 +348,10 @@ def stochastic_forecast(current_price, list_price=None):
         anchor_price = current_price + (list_price - current_price) * 0.3  # Anchor slightly above current
         upper_bound = list_price
         lower_bound = current_price * 0.7  # 30% drop max
-        # If deeply discounted, higher chance it reverts upward
-        daily_drift = 0.001 if (list_price - current_price) / list_price > 0.2 else -0.0005
+        
+        # If deeply discounted (>15%), highly likely to revert upward eventually
+        if (list_price - current_price) / list_price > 0.15:
+            daily_drift = abs(daily_drift) + 0.0005 
     else:
         anchor_price = current_price
         upper_bound = current_price * 1.5

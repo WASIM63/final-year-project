@@ -1,164 +1,126 @@
-# 📈 Amazon Price Forecasting System
+# 📈 PriceCast AI - Amazon Price Forecasting Platform
+
+PriceCast AI is an enterprise-grade, full-stack machine learning application designed to predict the future prices of Amazon products. It helps users pinpoint the exact best day to buy a product to maximize savings.
 
 ## 🚀 Overview
 
-This project is a **time-series forecasting system** that predicts future prices of Amazon products using historical price data.
-
-Users can input an Amazon product URL, and the system:
-
-* Extracts the **ASIN**
-* Fetches historical price data from a MySQL database
-* Applies preprocessing (cleaning, outlier removal, smoothing)
-* Uses a forecasting model to predict **next 30 days prices**
-* Displays results in an interactive **Streamlit dashboard**
+Users can input any Amazon product URL, and the system dynamically:
+* Scrapes the **live current price** and **M.R.P.** directly from Amazon.
+* Enriches the database automatically, learning from every search.
+* Uses a **Smart Tiered Forecasting Engine** to predict the next 30 days of prices.
+* Detects upcoming **major sale events** and adjusts forecasts accordingly.
+* Displays results in a premium, dark-themed **Next.js interactive dashboard**.
 
 ---
 
 ## 🎯 Features
 
-* 🔗 Amazon URL → ASIN extraction
-* 🗄️ MySQL database integration
-* 🧹 Data preprocessing:
-
-  * Missing value handling
-  * Outlier removal (IQR method)
-  * Smoothing (rolling mean)
-* 📊 Time-series forecasting using Prophet
-* 📉 Interactive visualization (Plotly)
-* 💡 Insights:
-
-  * Best time to buy
-  * Price trend (increasing/decreasing)
-* 📏 Model evaluation:
-
-  * MAE (Mean Absolute Error)
-  * RMSE (Root Mean Squared Error)
+* **Full-Stack Architecture**: Next.js 15 frontend powered by a Flask Python REST API.
+* **Authentication**: JWT-based secure user authentication and personalized dashboards.
+* **Live Amazon Scraping**: Real-time extraction of product titles, images, and pricing bounds.
+* **Smart Tiered ML Pipeline**:
+  * *1 Data Point*: Monte Carlo Stochastic Simulation with Geometric Brownian Motion (GBM).
+  * *2-4 Data Points*: Linear Trend Extrapolation.
+  * *5-13 Data Points*: Holt-Winters Exponential Smoothing.
+  * *14+ Data Points*: Massive Ensemble Model blending Auto-tuned ARIMA + Holt-Winters.
+* **Holiday & Sale Intelligence**: Automatically detects 10+ major global and Indian sales (Prime Day, Great Indian Festival, Black Friday) and injects realistic price drops into the forecast.
+* **Confidence Intervals**: 90% mathematically calculated confidence bands rendered visually on the chart.
+* **Premium UI/UX**: Built with Recharts, Lucide icons, glassmorphism, and responsive mobile-first CSS.
 
 ---
 
 ## 🏗️ Project Structure
 
 ```
-amazon_price_forecast/
+Amazon-Product-Price-Forecast/
 │
-├── app.py
-├── requirements.txt
-├── .env
-├── .gitignore
+├── frontend/                 # Next.js 15 React Application
+│   ├── src/app/              # App Router (Auth, Dashboard, Marketing)
+│   ├── src/components/       # Reusable UI components (ForecastChart, Navbar)
+│   └── src/lib/              # Axios API clients
 │
-├── utils/
-│   ├── __init__.py
-│   ├── asin_extractor.py
-│   ├── db.py
-│   ├── preprocess.py
-│   ├── model.py
+├── backend/                  # Flask REST API & ML Engine
+│   ├── app.py                # Main server entrypoint
+│   ├── db.py                 # MySQL database connection & schemas
+│   ├── routes/               # API endpoints (auth, predict)
+│   └── utils/                
+│       ├── model.py          # ARIMA, Holt-Winters, and Monte Carlo models
+│       ├── scraper.py        # Live Amazon BeautifulSoup scraper
+│       └── db_queries.py     # Auto-enrichment queries
 │
-└── README.md
+├── PREDICTION_ENGINE.md      # Detailed documentation of the AI pipeline
+└── README.md                 # Project overview
 ```
 
 ---
 
-## ⚙️ Installation
+## ⚙️ Installation & Setup
 
-### 1. Clone the repository
+### 1. Database Setup
+Ensure you have MySQL running locally. Create a database for the project (e.g., `pricecast_db`).
 
-```
-git clone https://github.com/your-username/amazon-price-forecast.git
-cd amazon-price-forecast
-```
+### 2. Backend Setup
 
-### 2. Create virtual environment
-
-```
+```bash
+cd backend
 python -m venv venv
-source venv/bin/activate   # Linux/Mac
-venv\Scripts\activate      # Windows
-```
+# Windows
+venv\Scripts\activate
+# Mac/Linux
+source venv/bin/activate
 
-### 3. Install dependencies
-
-```
 pip install -r requirements.txt
 ```
 
----
-
-## 🔐 Environment Variables
-
-Create a `.env` file in the root directory:
-
-```
+Create a `.env` file in the `backend/` directory:
+```env
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=your_password
-DB_NAME=your_database
+DB_NAME=pricecast_db
+JWT_SECRET_KEY=your_super_secret_jwt_key
 ```
 
-⚠️ Do NOT push `.env` to GitHub.
-
----
-
-## ▶️ Run the Application
-
-```
-streamlit run app.py
+Run the backend server:
+```bash
+python app.py
 ```
 
----
+### 3. Frontend Setup
 
-## 📊 Model Details
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-* Model: **Prophet (Time-Series Forecasting)**
-* Enhancements:
-
-  * Log transformation for stability
-  * Outlier removal for noise reduction
-  * Rolling mean smoothing
-  * Non-negative prediction constraint
+The application will be available at `http://localhost:3000`.
 
 ---
 
-## 📈 Evaluation Metrics
+## 📊 Model & Evaluation Metrics
 
-* **MAE (Mean Absolute Error)** → average prediction error
-* **RMSE (Root Mean Squared Error)** → penalizes large errors
-
----
-
-## ⚠️ Challenges
-
-* Price volatility due to sales and discounts
-* Missing or irregular data
-* External factors (demand, inventory) not included
+The engine automatically evaluates itself using Time-Series Cross-Validation (Sliding Window):
+* **MAE (Mean Absolute Error)** → Average prediction error in raw currency.
+* **RMSE (Root Mean Squared Error)** → Heavily penalizes large deviation errors.
+* The frontend visually indicates whether a prediction relies on **Database Data**, **Live Scraped Data**, or **Mixed Data**.
 
 ---
 
 ## 🔮 Future Improvements
 
-* Add **XGBoost / LSTM models**
-* Deploy on **Streamlit Cloud / AWS**
-* Add **price alert system (email/SMS)**
-* Include **holiday & sales event features**
-* Build **user dashboard with watchlist**
-
----
-
-## 🧠 Key Learnings
-
-* Time-series forecasting using Prophet
-* Data preprocessing for real-world datasets
-* Handling noisy and irregular data
-* Building end-to-end ML applications with Streamlit
+* Add email/SMS push notifications when a product reaches its "Best Buy Day".
+* Extend scraper support to other e-commerce platforms (Flipkart, Myntra).
+* Introduce global category-level decay rates for the Monte Carlo simulation.
 
 ---
 
 ## 📌 Author
 
-**Biswajit Adak**
+**Biswajit Adak**  
 Aspiring Data Analyst / Data Scientist
 
 ---
 
-## ⭐ If you like this project
-
-Give it a ⭐ on GitHub!
+## ⭐ Support
+If you like this project, please give it a ⭐ on GitHub!
