@@ -16,6 +16,8 @@ interface PredictionSummary {
   id: number;
   asin: string;
   amazon_url: string;
+  product_title: string | null;
+  product_image_url: string | null;
   trend: string;
   best_day_price: number;
   best_day_date: string;
@@ -58,9 +60,13 @@ export default function HistoryPage() {
     }
   };
 
-  const filtered = predictions.filter((p) =>
-    p.asin.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = predictions.filter((p) => {
+    const term = search.toLowerCase();
+    return (
+      p.asin.toLowerCase().includes(term) ||
+      (p.product_title && p.product_title.toLowerCase().includes(term))
+    );
+  });
 
   return (
     <div>
@@ -87,7 +93,7 @@ export default function HistoryPage() {
         <input
           type="text"
           className="input-field history-search-input"
-          placeholder="Search by ASIN..."
+          placeholder="Search by ASIN or product name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{ maxWidth: 400 }}
@@ -130,36 +136,53 @@ export default function HistoryPage() {
                 style={styles.card}
                 onClick={() => router.push(`/dashboard/prediction/${p.id}`)}
               >
-                <div style={styles.cardTop}>
-                  <div style={styles.asinBadge}>{p.asin}</div>
-                  <div style={styles.cardActions}>
-                    <div
-                      style={{
-                        ...styles.trendBadge,
-                        background:
-                          p.trend === "decreasing"
-                            ? "rgba(16,185,129,0.12)"
-                            : "rgba(239,68,68,0.12)",
-                        color:
-                          p.trend === "decreasing"
-                            ? "var(--accent-green)"
-                            : "var(--accent-red)",
-                      }}
-                    >
-                      {p.trend === "decreasing" ? (
-                        <TrendingDown size={14} style={{ marginRight: 4 }} />
-                      ) : (
-                        <TrendingUp size={14} style={{ marginRight: 4 }} />
-                      )}
-                      {p.trend}
+                {/* Product info row */}
+                <div style={styles.productRow}>
+                  {p.product_image_url && (
+                    <div style={styles.productThumb}>
+                      <img
+                        src={p.product_image_url}
+                        alt={p.product_title || "Product"}
+                        style={styles.productThumbImg}
+                      />
                     </div>
-                    <button
-                      onClick={(e) => handleDelete(p.id, e)}
-                      style={styles.deleteBtn}
-                      title="Delete prediction"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={styles.cardTop}>
+                      <div style={styles.asinBadge}>{p.asin}</div>
+                      <div style={styles.cardActions}>
+                        <div
+                          style={{
+                            ...styles.trendBadge,
+                            background:
+                              p.trend === "decreasing"
+                                ? "rgba(16,185,129,0.12)"
+                                : "rgba(239,68,68,0.12)",
+                            color:
+                              p.trend === "decreasing"
+                                ? "var(--accent-green)"
+                                : "var(--accent-red)",
+                          }}
+                        >
+                          {p.trend === "decreasing" ? (
+                            <TrendingDown size={14} style={{ marginRight: 4 }} />
+                          ) : (
+                            <TrendingUp size={14} style={{ marginRight: 4 }} />
+                          )}
+                          {p.trend}
+                        </div>
+                        <button
+                          onClick={(e) => handleDelete(p.id, e)}
+                          style={styles.deleteBtn}
+                          title="Delete prediction"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                    {p.product_title && (
+                      <p style={styles.productTitle}>{p.product_title}</p>
+                    )}
                   </div>
                 </div>
 
@@ -249,6 +272,39 @@ const styles: Record<string, React.CSSProperties> = {
   card: {
     padding: "24px",
     cursor: "pointer",
+  },
+  productRow: {
+    display: "flex",
+    gap: 14,
+    marginBottom: 16,
+  },
+  productThumb: {
+    width: 72,
+    height: 72,
+    borderRadius: 10,
+    overflow: "hidden",
+    border: "1px solid var(--border-subtle)",
+    background: "white",
+    flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  productThumbImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain" as const,
+    padding: 4,
+  },
+  productTitle: {
+    fontSize: "0.82rem",
+    color: "var(--text-secondary)",
+    lineHeight: 1.4,
+    overflow: "hidden" as const,
+    display: "-webkit-box",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical" as const,
+    marginTop: 6,
   },
   cardTop: {
     display: "flex",

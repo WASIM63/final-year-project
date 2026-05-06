@@ -5,6 +5,7 @@ from utils.asin_extractor import extract_asin
 from utils.db_queries import fetch_price_data
 from utils.preprocess import preprocess
 from utils.model import train_model, make_forecast, evaluate_model
+from utils.scraper import get_product_info
 from db import get_db_connection
 
 predict_bp = Blueprint("predict", __name__, url_prefix="/api")
@@ -16,13 +17,14 @@ def predict():
     """
     Accept an Amazon product URL, run the full ML pipeline:
     1. Extract ASIN
-    2. Fetch historical price data from MySQL
-    3. Preprocess (clean, outlier removal, smoothing)
-    4. Train Prophet model
-    5. Generate 30-day forecast
-    6. Evaluate model (MAE, RMSE)
-    7. Save prediction to database
-    8. Return results
+    2. Scrape product title & image from Amazon
+    3. Fetch historical price data from MySQL
+    4. Preprocess (clean, outlier removal, smoothing)
+    5. Train Prophet model
+    6. Generate 30-day forecast
+    7. Evaluate model (MAE, RMSE)
+    8. Save prediction to database
+    9. Return results
     """
     user_id = get_jwt_identity()
     data = request.get_json()
@@ -36,25 +38,28 @@ def predict():
     if not asin:
         return jsonify({"error": "Invalid Amazon URL. Could not extract ASIN."}), 400
 
-    # Step 2: Fetch historical data
+    # Step 2: Scrape product info (title & image)
+    product_title, product_image_url = get_product_info(url)
+
+    # Step 3: Fetch historical data
     df = fetch_price_data(asin)
     if df.empty:
         return jsonify({"error": f"No price data found for ASIN: {asin}"}), 404
 
     try:
-        # Step 3: Preprocess
+        # Step 4: Preprocess
         df_processed = preprocess(df)
 
         if len(df_processed) < 5:
             return jsonify({"error": "Not enough data points for forecasting (minimum 5 required)"}), 400
 
-        # Step 4: Train model
+        # Step 5: Train model
         model = train_model(df_processed)
 
-        # Step 5: Forecast
+        # Step 6: Forecast
         forecast_df = make_forecast(model, df_processed)
 
-        # Step 6: Evaluate
+        # Step 7: Evaluate
         mae, rmse = evaluate_model(df_processed)
 
         # Prepare response data
@@ -78,21 +83,24 @@ def predict():
         # Trend
         trend = "increasing" if forecast_df["yhat"].iloc[-1] > forecast_df["yhat"].iloc[0] else "decreasing"
 
-        # Step 7: Save prediction to database
+        # Step 8: Save prediction to database
         conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute(
             """
             INSERT INTO predictions 
-            (user_id, asin, amazon_url, forecast_data, historical_data,
+            (user_id, asin, amazon_url, product_title, product_image_url,
+             forecast_data, historical_data,
              best_day_date, best_day_price, trend, mae, rmse)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 user_id,
                 asin,
                 url,
+                product_title,
+                product_image_url,
                 json.dumps(forecast_list),
                 json.dumps(historical_list),
                 best_day["date"],
@@ -107,10 +115,12 @@ def predict():
         cursor.close()
         conn.close()
 
-        # Step 8: Return results
+        # Step 9: Return results
         return jsonify({
             "id": prediction_id,
             "asin": asin,
+            "product_title": product_title,
+            "product_image_url": product_image_url,
             "forecast": forecast_list,
             "historical": historical_list,
             "best_day": best_day,
@@ -137,7 +147,8 @@ def get_predictions():
     try:
         cursor.execute(
             """
-            SELECT id, asin, amazon_url, best_day_date, best_day_price,
+            SELECT id, asin, amazon_url, product_title, product_image_url,
+                   best_day_date, best_day_price,
                    trend, mae, rmse, created_at
             FROM predictions
             WHERE user_id = %s
@@ -147,7 +158,7 @@ def get_predictions():
         )
         predictions = cursor.fetchall()
 
-        # Serialize dates
+        # Serialize dates and decimal types
         for p in predictions:
             if p["best_day_date"]:
                 p["best_day_date"] = p["best_day_date"].isoformat()

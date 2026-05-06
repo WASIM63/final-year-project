@@ -14,6 +14,7 @@ import {
   BarChart3,
   Calendar,
   Award,
+  Package,
 } from "lucide-react";
 
 // Lazy load Recharts to avoid SSR issues
@@ -28,6 +29,8 @@ interface PredictionDetail {
   id: number;
   asin: string;
   amazon_url: string;
+  product_title: string | null;
+  product_image_url: string | null;
   forecast_data: ForecastPoint[];
   historical_data: ForecastPoint[];
   best_day_date: string;
@@ -112,21 +115,45 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
           <ChevronLeft size={18} />
           Back
         </button>
-        <div style={styles.headerInfo}>
-          <h1 className="detail-page-title" style={styles.pageTitle}>
-            Prediction Results
-            <span style={styles.asinBadge}>{prediction.asin}</span>
-          </h1>
-          <p style={styles.dateInfo}>
-            Generated on{" "}
-            {new Date(prediction.created_at).toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </p>
+        <div style={styles.headerContent}>
+          {prediction.product_image_url && (
+            <div style={styles.productImageWrap}>
+              <img
+                src={prediction.product_image_url}
+                alt={prediction.product_title || "Product"}
+                style={styles.productImage}
+              />
+            </div>
+          )}
+          <div style={styles.headerInfo}>
+            {prediction.product_title ? (
+              <h1 className="detail-page-title" style={styles.pageTitle}>
+                {prediction.product_title}
+                <span style={styles.asinBadge}>{prediction.asin}</span>
+              </h1>
+            ) : (
+              <h1 className="detail-page-title" style={styles.pageTitle}>
+                Prediction Results
+                <span style={styles.asinBadge}>{prediction.asin}</span>
+              </h1>
+            )}
+            <p style={styles.dateInfo}>
+              Generated on{" "}
+              {new Date(prediction.created_at).toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+            {!prediction.product_title && (
+              <p style={styles.noProductInfo}>
+                <Package size={14} style={{ marginRight: 4, verticalAlign: "middle" }} />
+                Product details could not be fetched from Amazon
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -326,7 +353,37 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 12,
     transition: "color 0.2s",
   },
+  headerContent: {
+    display: "flex",
+    gap: 20,
+    alignItems: "flex-start",
+  },
+  productImageWrap: {
+    width: 130,
+    height: 130,
+    borderRadius: 14,
+    overflow: "hidden",
+    border: "1px solid var(--border-subtle)",
+    background: "white",
+    flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  productImage: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain" as const,
+    padding: 8,
+  },
   headerInfo: {},
+  noProductInfo: {
+    fontSize: "0.82rem",
+    color: "var(--text-muted)",
+    marginTop: 6,
+    display: "inline-flex",
+    alignItems: "center",
+  },
   pageTitle: {
     fontSize: "1.75rem",
     fontWeight: 700,

@@ -16,6 +16,8 @@ import {
 interface PredictionSummary {
   id: number;
   asin: string;
+  product_title: string | null;
+  product_image_url: string | null;
   trend: string;
   best_day_price: number;
   best_day_date: string;
@@ -152,27 +154,43 @@ export default function DashboardPage() {
                 style={styles.predCard}
                 onClick={() => router.push(`/dashboard/prediction/${p.id}`)}
               >
-                <div style={styles.predTop}>
-                  <div style={styles.asinBadge}>{p.asin}</div>
-                  <div
-                    style={{
-                      ...styles.trendBadge,
-                      background:
-                        p.trend === "decreasing"
-                          ? "rgba(16,185,129,0.12)"
-                          : "rgba(239,68,68,0.12)",
-                      color:
-                        p.trend === "decreasing"
-                          ? "var(--accent-green)"
-                          : "var(--accent-red)",
-                    }}
-                  >
-                    {p.trend === "decreasing" ? (
-                      <TrendingDown size={14} style={{ marginRight: 4 }} />
-                    ) : (
-                      <TrendingUp size={14} style={{ marginRight: 4 }} />
+                <div style={styles.predProductRow}>
+                  {p.product_image_url && (
+                    <div style={styles.predThumb}>
+                      <img
+                        src={p.product_image_url}
+                        alt={p.product_title || "Product"}
+                        style={styles.predThumbImg}
+                      />
+                    </div>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={styles.predTop}>
+                      <div style={styles.asinBadge}>{p.asin}</div>
+                      <div
+                        style={{
+                          ...styles.trendBadge,
+                          background:
+                            p.trend === "decreasing"
+                              ? "rgba(16,185,129,0.12)"
+                              : "rgba(239,68,68,0.12)",
+                          color:
+                            p.trend === "decreasing"
+                              ? "var(--accent-green)"
+                              : "var(--accent-red)",
+                        }}
+                      >
+                        {p.trend === "decreasing" ? (
+                          <TrendingDown size={14} style={{ marginRight: 4 }} />
+                        ) : (
+                          <TrendingUp size={14} style={{ marginRight: 4 }} />
+                        )}
+                        {p.trend === "decreasing" ? "Dropping" : "Rising"}
+                      </div>
+                    </div>
+                    {p.product_title && (
+                      <p style={styles.predTitle}>{p.product_title}</p>
                     )}
-                    {p.trend === "decreasing" ? "Dropping" : "Rising"}
                   </div>
                 </div>
                 <div style={styles.predMiddle}>
@@ -296,6 +314,39 @@ const styles: Record<string, React.CSSProperties> = {
   predCard: {
     padding: "24px",
     cursor: "pointer",
+  },
+  predProductRow: {
+    display: "flex",
+    gap: 12,
+    marginBottom: 16,
+  },
+  predThumb: {
+    width: 64,
+    height: 64,
+    borderRadius: 10,
+    overflow: "hidden",
+    border: "1px solid var(--border-subtle)",
+    background: "white",
+    flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  predThumbImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain" as const,
+    padding: 3,
+  },
+  predTitle: {
+    fontSize: "0.8rem",
+    color: "var(--text-secondary)",
+    lineHeight: 1.4,
+    overflow: "hidden" as const,
+    display: "-webkit-box",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical" as const,
+    marginTop: 4,
   },
   predTop: {
     display: "flex",

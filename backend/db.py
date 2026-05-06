@@ -37,6 +37,8 @@ def init_db():
             user_id INT NOT NULL,
             asin VARCHAR(20) NOT NULL,
             amazon_url TEXT,
+            product_title TEXT,
+            product_image_url TEXT,
             forecast_data JSON,
             historical_data JSON,
             best_day_date DATE,
@@ -49,7 +51,25 @@ def init_db():
         )
     """)
 
+    # Migration: add product columns to existing tables that lack them
+    try:
+        cursor.execute("""
+            ALTER TABLE predictions
+            ADD COLUMN product_title TEXT AFTER amazon_url
+        """)
+    except Exception:
+        pass  # Column already exists
+
+    try:
+        cursor.execute("""
+            ALTER TABLE predictions
+            ADD COLUMN product_image_url TEXT AFTER product_title
+        """)
+    except Exception:
+        pass  # Column already exists
+
     conn.commit()
     cursor.close()
     conn.close()
-    print("✅ Database tables initialized successfully.")
+    print("[OK] Database tables initialized successfully.")
+
