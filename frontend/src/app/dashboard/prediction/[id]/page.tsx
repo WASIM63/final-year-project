@@ -19,6 +19,7 @@ import {
   Cloud,
   Sparkles,
   Gift,
+  IndianRupee,
 } from "lucide-react";
 
 // Lazy load Recharts to avoid SSR issues
@@ -74,7 +75,7 @@ function getUpcomingSale(forecastData: ForecastPoint[]): string | null {
     for (const sale of sale_events) {
       const [start_m, start_d] = sale.start;
       const [end_m, end_d] = sale.end;
-      
+
       if ((m === start_m && day >= start_d) || (m === end_m && day <= end_d) || (start_m < m && m < end_m)) {
         return sale.name;
       }
@@ -213,20 +214,20 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
                 background: prediction.data_source === "scraped"
                   ? "rgba(245,158,11,0.12)"
                   : prediction.data_source === "mixed"
-                  ? "rgba(139,92,246,0.12)"
-                  : "rgba(16,185,129,0.12)",
+                    ? "rgba(139,92,246,0.12)"
+                    : "rgba(16,185,129,0.12)",
                 color: prediction.data_source === "scraped"
                   ? "var(--accent-amber)"
                   : prediction.data_source === "mixed"
-                  ? "var(--accent-purple)"
-                  : "var(--accent-green)",
+                    ? "var(--accent-purple)"
+                    : "var(--accent-green)",
               }}>
                 {prediction.data_source === "scraped" ? <Cloud size={13} /> :
-                 prediction.data_source === "mixed" ? <Sparkles size={13} /> :
-                 <Database size={13} />}
+                  prediction.data_source === "mixed" ? <Sparkles size={13} /> :
+                    <Database size={13} />}
                 {prediction.data_source === "scraped" ? "Live Scraped" :
-                 prediction.data_source === "mixed" ? "DB + Live Data" :
-                 "Database"}
+                  prediction.data_source === "mixed" ? "DB + Live Data" :
+                    "Database"}
               </div>
             )}
           </div>
@@ -238,7 +239,7 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
         {/* Best Buy Day */}
         <div className="glass-card-static detail-metric-card" style={{ ...styles.metricCard, borderColor: "rgba(16,185,129,0.3)" }}>
           <div style={{ ...styles.metricIcon, background: "rgba(16,185,129,0.12)", color: "var(--accent-green)" }}>
-            <BadgeDollarSign size={22} />
+            <IndianRupee size={22} />
           </div>
           <div style={styles.metricLabel}>Best Day to Buy</div>
           <div className="detail-metric-value" style={{ ...styles.metricValue, color: "var(--accent-green)" }}>
@@ -332,7 +333,7 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
             </h2>
             <p style={styles.chartSub}>Historical prices (blue) vs AI-predicted prices (cyan)</p>
           </div>
-          
+
           {/* Subtle Upcoming Sale Note */}
           {prediction.forecast_data && getUpcomingSale(prediction.forecast_data) && (
             <div style={{
@@ -352,7 +353,7 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
             </div>
           )}
         </div>
-        
+
         <div className="detail-chart-wrap" style={styles.chartWrap}>
           <ForecastChart
             historical={prediction.historical_data}
