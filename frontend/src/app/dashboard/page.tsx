@@ -4,6 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { predictAPI } from "@/lib/api";
+import {
+  Sparkles,
+  BarChart3,
+  TrendingDown,
+  TrendingUp,
+  Bot,
+  Target,
+} from "lucide-react";
 
 interface PredictionSummary {
   id: number;
@@ -36,51 +44,60 @@ export default function DashboardPage() {
   return (
     <div>
       {/* Welcome */}
-      <div className="animate-fade-in-up" style={styles.welcome}>
+      <div className="animate-fade-in-up dashboard-welcome" style={styles.welcome}>
         <div>
-          <h1 style={styles.greeting}>
-            Welcome back, <span style={styles.nameHighlight}>{user?.name?.split(" ")[0]}</span> 👋
+          <h1 className="dashboard-greeting" style={styles.greeting}>
+            Welcome back, <span style={styles.nameHighlight}>{user?.name?.split(" ")[0]}</span>
           </h1>
           <p style={styles.welcomeSub}>
             Ready to forecast some prices? Paste an Amazon URL to get started.
           </p>
         </div>
         <button
-          className="btn-primary"
+          className="btn-primary dashboard-welcome-btn"
           onClick={() => router.push("/dashboard/predict")}
           style={styles.ctaBtn}
         >
-          🔮 New Prediction
+          <Sparkles size={18} style={{ marginRight: 8 }} />
+          New Prediction
         </button>
       </div>
 
       {/* Stats Row */}
-      <div className="animate-fade-in-up stagger-1" style={styles.statsGrid}>
-        <div className="glass-card" style={styles.statCard}>
-          <div style={styles.statIcon}>📊</div>
+      <div className="animate-fade-in-up stagger-1 stats-grid" style={styles.statsGrid}>
+        <div className="glass-card stat-card" style={styles.statCard}>
+          <div className="stat-icon" style={styles.statIcon}>
+            <BarChart3 size={22} color="var(--accent-indigo)" />
+          </div>
           <div>
-            <div style={styles.statValue}>{totalPredictions}</div>
+            <div className="stat-value" style={styles.statValue}>{totalPredictions}</div>
             <div style={styles.statLabel}>Total Predictions</div>
           </div>
         </div>
-        <div className="glass-card" style={styles.statCard}>
-          <div style={{ ...styles.statIcon, background: "rgba(16,185,129,0.12)" }}>📉</div>
+        <div className="glass-card stat-card" style={styles.statCard}>
+          <div className="stat-icon" style={{ ...styles.statIcon, background: "rgba(16,185,129,0.12)" }}>
+            <TrendingDown size={22} color="var(--accent-green)" />
+          </div>
           <div>
-            <div style={{ ...styles.statValue, color: "var(--accent-green)" }}>{decreasingCount}</div>
+            <div className="stat-value" style={{ ...styles.statValue, color: "var(--accent-green)" }}>{decreasingCount}</div>
             <div style={styles.statLabel}>Price Dropping</div>
           </div>
         </div>
-        <div className="glass-card" style={styles.statCard}>
-          <div style={{ ...styles.statIcon, background: "rgba(239,68,68,0.12)" }}>📈</div>
+        <div className="glass-card stat-card" style={styles.statCard}>
+          <div className="stat-icon" style={{ ...styles.statIcon, background: "rgba(239,68,68,0.12)" }}>
+            <TrendingUp size={22} color="var(--accent-red)" />
+          </div>
           <div>
-            <div style={{ ...styles.statValue, color: "var(--accent-red)" }}>{increasingCount}</div>
+            <div className="stat-value" style={{ ...styles.statValue, color: "var(--accent-red)" }}>{increasingCount}</div>
             <div style={styles.statLabel}>Price Rising</div>
           </div>
         </div>
-        <div className="glass-card" style={styles.statCard}>
-          <div style={{ ...styles.statIcon, background: "rgba(245,158,11,0.12)" }}>🤖</div>
+        <div className="glass-card stat-card" style={styles.statCard}>
+          <div className="stat-icon" style={{ ...styles.statIcon, background: "rgba(245,158,11,0.12)" }}>
+            <Bot size={22} color="var(--accent-amber)" />
+          </div>
           <div>
-            <div style={{ ...styles.statValue, color: "var(--accent-amber)" }}>Prophet</div>
+            <div className="stat-value" style={{ ...styles.statValue, color: "var(--accent-amber)" }}>Prophet</div>
             <div style={styles.statLabel}>ML Model</div>
           </div>
         </div>
@@ -102,14 +119,18 @@ export default function DashboardPage() {
         </div>
 
         {loading ? (
-          <div style={styles.skeletonGrid}>
+          <div className="skeleton-grid" style={styles.skeletonGrid}>
             {[1, 2, 3].map((i) => (
               <div key={i} className="skeleton" style={{ height: 120, borderRadius: 16 }} />
             ))}
           </div>
         ) : predictions.length === 0 ? (
           <div className="glass-card-static" style={styles.emptyState}>
-            <div style={{ fontSize: "3rem", marginBottom: 16 }}>🔮</div>
+            <div style={{ marginBottom: 16, display: "flex", justifyContent: "center" }}>
+              <div style={{ width: 64, height: 64, borderRadius: 16, background: "rgba(99,102,241,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Target size={32} color="var(--accent-indigo)" />
+              </div>
+            </div>
             <h3 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: 8 }}>No predictions yet</h3>
             <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: 20 }}>
               Start by pasting an Amazon product URL to get your first price forecast.
@@ -123,11 +144,11 @@ export default function DashboardPage() {
             </button>
           </div>
         ) : (
-          <div style={styles.predGrid}>
+          <div className="pred-grid" style={styles.predGrid}>
             {predictions.slice(0, 6).map((p) => (
               <div
                 key={p.id}
-                className="glass-card"
+                className="glass-card pred-card"
                 style={styles.predCard}
                 onClick={() => router.push(`/dashboard/prediction/${p.id}`)}
               >
@@ -146,7 +167,12 @@ export default function DashboardPage() {
                           : "var(--accent-red)",
                     }}
                   >
-                    {p.trend === "decreasing" ? "📉 Dropping" : "📈 Rising"}
+                    {p.trend === "decreasing" ? (
+                      <TrendingDown size={14} style={{ marginRight: 4 }} />
+                    ) : (
+                      <TrendingUp size={14} style={{ marginRight: 4 }} />
+                    )}
+                    {p.trend === "decreasing" ? "Dropping" : "Rising"}
                   </div>
                 </div>
                 <div style={styles.predMiddle}>
@@ -195,7 +221,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 6,
   },
   nameHighlight: {
-    background: "linear-gradient(135deg, #00d4ff, #8b5cf6)",
+    background: "var(--gradient-primary)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
   },
@@ -207,6 +233,8 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "14px 28px",
     fontSize: "0.95rem",
     flexShrink: 0,
+    display: "inline-flex",
+    alignItems: "center",
   },
   statsGrid: {
     display: "grid",
@@ -228,7 +256,6 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "1.3rem",
     flexShrink: 0,
   },
   statValue: {
@@ -291,6 +318,8 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "4px 12px",
     fontSize: "0.78rem",
     fontWeight: 600,
+    display: "inline-flex",
+    alignItems: "center",
   },
   predMiddle: {
     display: "flex",

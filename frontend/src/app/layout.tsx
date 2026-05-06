@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 export const metadata: Metadata = {
   title: "PriceCast AI — Amazon Product Price Forecast",
@@ -15,14 +16,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark">
       <body>
-        <AuthProvider>
-          {/* Decorative orbs */}
-          <div className="orb orb-1" />
-          <div className="orb orb-2" />
-          {children}
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            {/* Decorative orbs */}
+            <div className="orb orb-1" />
+            <div className="orb orb-2" />
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

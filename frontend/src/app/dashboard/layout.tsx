@@ -3,18 +3,29 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import Link from "next/link";
+import {
+  Zap,
+  Sparkles,
+  ClipboardList,
+  TrendingUp,
+  LogOut,
+  Sun,
+  Moon,
+} from "lucide-react";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: "⚡" },
-  { href: "/dashboard/predict", label: "New Prediction", icon: "🔮" },
-  { href: "/dashboard/history", label: "History", icon: "📋" },
+  { href: "/dashboard", label: "Dashboard", icon: <Zap size={18} /> },
+  { href: "/dashboard/predict", label: "New Prediction", icon: <Sparkles size={18} /> },
+  { href: "/dashboard/history", label: "History", icon: <ClipboardList size={18} /> },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout, isAuthenticated, loading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -35,11 +46,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div style={styles.layout}>
       {/* Sidebar */}
-      <aside style={styles.sidebar}>
+      <aside className="dashboard-sidebar" style={styles.sidebar}>
         <div style={styles.sidebarInner}>
           {/* Logo */}
           <Link href="/dashboard" style={styles.logo}>
-            <span style={{ fontSize: "1.5rem" }}>📈</span>
+            <div style={styles.logoIconWrap}>
+              <TrendingUp size={18} strokeWidth={2.5} />
+            </div>
             <span style={styles.logoText}>PriceCast AI</span>
           </Link>
 
@@ -56,54 +69,80 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     ...(isActive ? styles.navLinkActive : {}),
                   }}
                 >
-                  <span style={{ fontSize: "1.1rem" }}>{item.icon}</span>
+                  <span style={{ display: "flex", alignItems: "center", color: isActive ? "var(--accent-cyan)" : "var(--text-muted)" }}>
+                    {item.icon}
+                  </span>
                   {item.label}
                 </Link>
               );
             })}
           </nav>
 
-          {/* User section */}
-          <div style={styles.userSection}>
-            <div style={styles.avatar}>
-              {user?.name?.charAt(0).toUpperCase() || "U"}
-            </div>
-            <div style={styles.userInfo}>
-              <div style={styles.userName}>{user?.name}</div>
-              <div style={styles.userEmail}>{user?.email}</div>
-            </div>
+          {/* Theme toggle + User section */}
+          <div style={styles.bottomSection}>
+            {/* Theme toggle */}
             <button
-              onClick={() => {
-                logout();
-                router.push("/login");
-              }}
-              style={styles.logoutBtn}
-              title="Logout"
+              onClick={toggleTheme}
+              className="theme-toggle"
+              style={{ width: "100%", justifyContent: "flex-start", gap: 12, padding: "10px 16px", borderRadius: 12 }}
+              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
+              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+              <span style={{ fontSize: "0.88rem", fontWeight: 500 }}>
+                {theme === "dark" ? "Light Mode" : "Dark Mode"}
+              </span>
             </button>
+
+            {/* User section */}
+            <div style={styles.userSection}>
+              <div style={styles.avatar}>
+                {user?.name?.charAt(0).toUpperCase() || "U"}
+              </div>
+              <div style={styles.userInfo}>
+                <div style={styles.userName}>{user?.name}</div>
+                <div style={styles.userEmail}>{user?.email}</div>
+              </div>
+              <button
+                onClick={() => {
+                  logout();
+                  router.push("/login");
+                }}
+                style={styles.logoutBtn}
+                title="Logout"
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
           </div>
         </div>
       </aside>
 
       {/* Main content */}
-      <main style={styles.main}>
+      <main className="dashboard-main" style={styles.main}>
         {/* Top bar (mobile) */}
-        <div style={styles.topBar}>
-          <span style={{ fontSize: "1.25rem" }}>📈</span>
-          <span style={styles.topBarTitle}>PriceCast AI</span>
+        <div className="dashboard-topbar" style={styles.topBar}>
+          <div style={styles.topBarLeft}>
+            <div style={styles.logoIconWrapSmall}>
+              <TrendingUp size={16} strokeWidth={2.5} />
+            </div>
+            <span style={styles.topBarTitle}>PriceCast AI</span>
+          </div>
+          <button
+            onClick={toggleTheme}
+            className="theme-toggle"
+            style={{ width: 36, height: 36, borderRadius: 10 }}
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          >
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
         </div>
 
-        <div style={styles.content}>
+        <div className="dashboard-content" style={styles.content}>
           {children}
         </div>
 
         {/* Mobile bottom nav */}
-        <div style={styles.mobileNav}>
+        <div className="dashboard-mobile-nav" style={styles.mobileNav}>
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -115,7 +154,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   ...(isActive ? styles.mobileNavLinkActive : {}),
                 }}
               >
-                <span style={{ fontSize: "1.2rem" }}>{item.icon}</span>
+                <span style={{ display: "flex", color: isActive ? "var(--accent-cyan)" : "inherit" }}>
+                  {item.icon}
+                </span>
                 <span style={styles.mobileNavLabel}>{item.label.split(" ").pop()}</span>
               </Link>
             );
@@ -127,7 +168,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             }}
             style={styles.mobileNavLink}
           >
-            <span style={{ fontSize: "1.2rem" }}>🚪</span>
+            <span style={{ display: "flex" }}>
+              <LogOut size={18} />
+            </span>
             <span style={styles.mobileNavLabel}>Logout</span>
           </button>
         </div>
@@ -144,7 +187,7 @@ const styles: Record<string, React.CSSProperties> = {
   sidebar: {
     width: "var(--sidebar-width)",
     borderRight: "1px solid var(--border-subtle)",
-    background: "rgba(5, 10, 24, 0.9)",
+    background: "var(--sidebar-bg)",
     backdropFilter: "blur(20px)",
     position: "fixed",
     top: 0,
@@ -168,10 +211,32 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 40,
     paddingLeft: 8,
   },
+  logoIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 9,
+    background: "var(--gradient-primary)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "white",
+    flexShrink: 0,
+  },
+  logoIconWrapSmall: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    background: "var(--gradient-primary)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "white",
+    flexShrink: 0,
+  },
   logoText: {
     fontSize: "1.15rem",
     fontWeight: 700,
-    background: "linear-gradient(135deg, #00d4ff, #8b5cf6)",
+    background: "linear-gradient(135deg, var(--accent-cyan), var(--accent-purple))",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
   },
@@ -198,13 +263,19 @@ const styles: Record<string, React.CSSProperties> = {
     color: "var(--accent-cyan)",
     borderLeft: "3px solid var(--accent-cyan)",
   },
+  bottomSection: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 12,
+    borderTop: "1px solid var(--border-subtle)",
+    paddingTop: 16,
+    marginTop: 8,
+  },
   userSection: {
     display: "flex",
     alignItems: "center",
     gap: 12,
-    padding: "16px 12px",
-    borderTop: "1px solid var(--border-subtle)",
-    marginTop: 8,
+    padding: "8px 4px",
   },
   avatar: {
     width: 36,
@@ -217,6 +288,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     fontSize: "0.85rem",
     flexShrink: 0,
+    color: "white",
   },
   userInfo: {
     flex: 1,
@@ -245,6 +317,8 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 8,
     transition: "color 0.2s",
     flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
   },
   main: {
     flex: 1,
@@ -256,15 +330,24 @@ const styles: Record<string, React.CSSProperties> = {
   topBar: {
     display: "none",
     alignItems: "center",
+    justifyContent: "space-between",
     gap: 10,
     padding: "16px 20px",
     borderBottom: "1px solid var(--border-subtle)",
-    background: "rgba(5, 10, 24, 0.8)",
+    background: "var(--topbar-bg)",
     backdropFilter: "blur(12px)",
+    position: "sticky",
+    top: 0,
+    zIndex: 40,
+  },
+  topBarLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
   },
   topBarTitle: {
     fontWeight: 700,
-    background: "linear-gradient(135deg, #00d4ff, #8b5cf6)",
+    background: "linear-gradient(135deg, var(--accent-cyan), var(--accent-purple))",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
   },
@@ -280,10 +363,11 @@ const styles: Record<string, React.CSSProperties> = {
     bottom: 0,
     left: 0,
     right: 0,
-    background: "rgba(5, 10, 24, 0.95)",
+    background: "var(--mobile-nav-bg)",
     backdropFilter: "blur(20px)",
     borderTop: "1px solid var(--border-subtle)",
-    padding: "8px 16px",
+    padding: "8px 8px",
+    paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))",
     justifyContent: "space-around",
     zIndex: 50,
   },
@@ -292,36 +376,20 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: "column",
     alignItems: "center",
     gap: 4,
-    padding: "8px 12px",
+    padding: "8px 8px",
     color: "var(--text-muted)",
     textDecoration: "none",
     background: "none",
     border: "none",
     cursor: "pointer",
     fontFamily: "inherit",
+    minWidth: 0,
   },
   mobileNavLinkActive: {
     color: "var(--accent-cyan)",
   },
   mobileNavLabel: {
-    fontSize: "0.65rem",
+    fontSize: "0.6rem",
     fontWeight: 500,
   },
 };
-
-// Add responsive CSS via a style tag (since we're using inline styles)
-if (typeof document !== "undefined") {
-  const styleId = "dashboard-responsive";
-  if (!document.getElementById(styleId)) {
-    const style = document.createElement("style");
-    style.id = styleId;
-    style.textContent = `
-      @media (max-width: 768px) {
-        aside[style] { display: none !important; }
-        main[style] { margin-left: 0 !important; }
-        div[style*="topBar"] { display: flex !important; }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-}

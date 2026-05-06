@@ -3,6 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { predictAPI } from "@/lib/api";
+import {
+  ClipboardList,
+  Plus,
+  TrendingDown,
+  TrendingUp,
+  Trash2,
+  Inbox,
+} from "lucide-react";
 
 interface PredictionSummary {
   id: number;
@@ -56,17 +64,21 @@ export default function HistoryPage() {
 
   return (
     <div>
-      <div className="animate-fade-in-up" style={styles.header}>
+      <div className="animate-fade-in-up history-header" style={styles.header}>
         <div>
-          <h1 style={styles.title}>📋 Prediction History</h1>
+          <h1 className="history-title" style={styles.title}>
+            <ClipboardList size={24} style={{ marginRight: 10, verticalAlign: "middle" }} />
+            Prediction History
+          </h1>
           <p style={styles.subtitle}>View and manage all your past price predictions.</p>
         </div>
         <button
           className="btn-primary"
           onClick={() => router.push("/dashboard/predict")}
-          style={{ padding: "12px 24px" }}
+          style={{ padding: "12px 24px", display: "inline-flex", alignItems: "center", gap: 6 }}
         >
-          + New Prediction
+          <Plus size={18} />
+          New Prediction
         </button>
       </div>
 
@@ -74,7 +86,7 @@ export default function HistoryPage() {
       <div className="animate-fade-in-up stagger-1" style={styles.searchRow}>
         <input
           type="text"
-          className="input-field"
+          className="input-field history-search-input"
           placeholder="Search by ASIN..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -88,14 +100,18 @@ export default function HistoryPage() {
       {/* List */}
       <div className="animate-fade-in-up stagger-2">
         {loading ? (
-          <div style={styles.grid}>
+          <div className="history-grid" style={styles.grid}>
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="skeleton" style={{ height: 160, borderRadius: 16 }} />
             ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="glass-card-static" style={styles.empty}>
-            <div style={{ fontSize: "3rem", marginBottom: 16 }}>📭</div>
+            <div style={{ marginBottom: 16, display: "flex", justifyContent: "center" }}>
+              <div style={{ width: 64, height: 64, borderRadius: 16, background: "rgba(99,102,241,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Inbox size={32} color="var(--accent-indigo)" />
+              </div>
+            </div>
             <h3 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: 8 }}>
               {search ? "No matching predictions" : "No predictions yet"}
             </h3>
@@ -106,7 +122,7 @@ export default function HistoryPage() {
             </p>
           </div>
         ) : (
-          <div style={styles.grid}>
+          <div className="history-grid" style={styles.grid}>
             {filtered.map((p) => (
               <div
                 key={p.id}
@@ -130,14 +146,19 @@ export default function HistoryPage() {
                             : "var(--accent-red)",
                       }}
                     >
-                      {p.trend === "decreasing" ? "📉" : "📈"} {p.trend}
+                      {p.trend === "decreasing" ? (
+                        <TrendingDown size={14} style={{ marginRight: 4 }} />
+                      ) : (
+                        <TrendingUp size={14} style={{ marginRight: 4 }} />
+                      )}
+                      {p.trend}
                     </div>
                     <button
                       onClick={(e) => handleDelete(p.id, e)}
                       style={styles.deleteBtn}
                       title="Delete prediction"
                     >
-                      🗑️
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
@@ -198,6 +219,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "1.75rem",
     fontWeight: 700,
     marginBottom: 4,
+    display: "inline-flex",
+    alignItems: "center",
   },
   subtitle: {
     color: "var(--text-secondary)",
@@ -254,15 +277,19 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "0.75rem",
     fontWeight: 600,
     textTransform: "capitalize" as const,
+    display: "inline-flex",
+    alignItems: "center",
   },
   deleteBtn: {
     background: "none",
     border: "none",
     cursor: "pointer",
-    fontSize: "0.9rem",
     opacity: 0.5,
     transition: "opacity 0.2s",
     padding: 4,
+    color: "var(--text-muted)",
+    display: "flex",
+    alignItems: "center",
   },
   cardBody: {},
   cardRow: {

@@ -2,11 +2,24 @@
 
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useEffect } from "react";
+import {
+  TrendingUp,
+  Link2,
+  Bot,
+  BarChart3,
+  BadgeDollarSign,
+  ArrowRight,
+  Sun,
+  Moon,
+  IndianRupee,
+} from "lucide-react";
 
 export default function LandingPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -20,53 +33,61 @@ export default function LandingPage() {
       <div style={styles.gridBg} />
 
       {/* Hero Section */}
-      <nav style={styles.nav}>
+      <nav className="landing-nav" style={styles.nav}>
         <div style={styles.logo}>
-          <span style={styles.logoIcon}>📈</span>
-          <span style={styles.logoText}>PriceCast AI</span>
+          <div style={styles.logoIconWrap}>
+            <TrendingUp size={20} strokeWidth={2.5} />
+          </div>
+          <span className="landing-logo-text" style={styles.logoText}>PriceCast AI</span>
         </div>
-        <div style={styles.navLinks}>
-          <button onClick={() => router.push("/login")} style={styles.navBtn}>
+        <div className="landing-nav-links" style={styles.navLinks}>
+          <button
+            onClick={toggleTheme}
+            className="theme-toggle"
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          <button onClick={() => router.push("/login")} className="landing-nav-login" style={styles.navBtn}>
             Login
           </button>
-          <button onClick={() => router.push("/register")} className="btn-primary" style={styles.navCta}>
+          <button onClick={() => router.push("/register")} className="btn-primary landing-nav-cta" style={styles.navCta}>
             Get Started
           </button>
         </div>
       </nav>
 
-      <main style={styles.main}>
-        <div className="animate-fade-in-up" style={styles.hero}>
-          <div style={styles.badge}>
+      <main className="landing-main" style={styles.main}>
+        <div className="animate-fade-in-up landing-hero" style={styles.hero}>
+          <div className="landing-badge" style={styles.badge}>
             <span style={styles.badgeDot} />
             Powered by Prophet AI
           </div>
 
-          <h1 style={styles.heading}>
+          <h1 className="landing-heading" style={styles.heading}>
             Predict Amazon Prices
             <br />
             <span style={styles.gradientText}>Before They Change</span>
           </h1>
 
-          <p style={styles.subtitle}>
+          <p className="landing-subtitle" style={styles.subtitle}>
             Leverage advanced time-series forecasting to predict future prices of any Amazon product.
             Get 30-day price predictions, best buy recommendations, and trend analysis — all powered by machine learning.
           </p>
 
-          <div style={styles.ctaGroup}>
+          <div className="landing-cta-group" style={styles.ctaGroup}>
             <button
               onClick={() => router.push("/register")}
-              className="btn-primary"
+              className="btn-primary landing-hero-btn"
               style={styles.heroBtn}
             >
               Start Forecasting — Free
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 8 }}>
-                <path d="m5 12h14" /><path d="m12 5 7 7-7 7" />
-              </svg>
+              <ArrowRight size={18} style={{ marginLeft: 8 }} />
             </button>
             <button
               onClick={() => router.push("/login")}
-              className="btn-secondary"
+              className="btn-secondary landing-hero-btn-sec"
               style={styles.heroBtnSec}
             >
               Sign In
@@ -75,31 +96,41 @@ export default function LandingPage() {
         </div>
 
         {/* Feature cards */}
-        <div style={styles.features} className="animate-fade-in-up stagger-2">
+        <div className="animate-fade-in-up stagger-2 landing-features" style={styles.features}>
           {[
             {
-              icon: "🔗",
+              icon: <Link2 size={28} />,
               title: "Paste Any URL",
               desc: "Just paste an Amazon product link. We extract the ASIN and fetch historical data automatically.",
+              color: "var(--accent-cyan)",
+              bg: "rgba(0, 212, 255, 0.1)",
             },
             {
-              icon: "🤖",
+              icon: <Bot size={28} />,
               title: "AI Forecasting",
               desc: "Facebook Prophet model with log transformation, outlier removal, and rolling smoothing for accurate predictions.",
+              color: "var(--accent-indigo)",
+              bg: "rgba(99, 102, 241, 0.1)",
             },
             {
-              icon: "📊",
+              icon: <BarChart3 size={28} />,
               title: "Visual Insights",
               desc: "Interactive charts showing historical trends, 30-day forecasts, best buy timing, and model evaluation metrics.",
+              color: "var(--accent-purple)",
+              bg: "rgba(139, 92, 246, 0.1)",
             },
             {
-              icon: "💰",
+              icon: <IndianRupee size={28} />,
               title: "Best Buy Timing",
               desc: "Know exactly when the price will dip. Our model identifies the optimal purchasing window in the next 30 days.",
+              color: "var(--accent-green)",
+              bg: "rgba(16, 185, 129, 0.1)",
             },
           ].map((f, i) => (
-            <div key={i} className="glass-card" style={styles.featureCard}>
-              <div style={styles.featureIcon}>{f.icon}</div>
+            <div key={i} className="glass-card landing-feature-card" style={styles.featureCard}>
+              <div style={{ ...styles.featureIcon, background: f.bg, color: f.color }}>
+                {f.icon}
+              </div>
               <h3 style={styles.featureTitle}>{f.title}</h3>
               <p style={styles.featureDesc}>{f.desc}</p>
             </div>
@@ -107,7 +138,7 @@ export default function LandingPage() {
         </div>
 
         {/* Stats */}
-        <div style={styles.stats} className="animate-fade-in-up stagger-3">
+        <div className="animate-fade-in-up stagger-3 landing-stats" style={styles.stats}>
           {[
             { value: "30", label: "Day Forecast", suffix: "+" },
             { value: "95", label: "Accuracy Rate", suffix: "%" },
@@ -115,7 +146,7 @@ export default function LandingPage() {
             { value: "< 10s", label: "Prediction Time", suffix: "" },
           ].map((s, i) => (
             <div key={i} style={styles.statItem}>
-              <div style={styles.statValue}>
+              <div className="landing-stat-value" style={styles.statValue}>
                 {s.value}
                 <span style={styles.statSuffix}>{s.suffix}</span>
               </div>
@@ -127,8 +158,8 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer style={styles.footer}>
-        <p style={styles.footerText}>
-          © 2026 PriceCast AI — Built by <strong>Biswajit Adak</strong>
+        <p className="landing-footer-text" style={styles.footerText}>
+          © 2026 PriceCast AI — Built by <strong>Biswajit Adak</strong>, <strong>Wasim Akram Mallick</strong>, <strong>Md Ramjan Khan</strong>, <strong>Towhid Anuar</strong> & <strong>Amarjit Das</strong>
         </p>
       </footer>
     </div>
@@ -147,7 +178,7 @@ const styles: Record<string, React.CSSProperties> = {
     position: "fixed",
     inset: 0,
     backgroundImage:
-      "linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px)",
+      "linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px)",
     backgroundSize: "60px 60px",
     pointerEvents: "none",
     zIndex: 0,
@@ -164,14 +195,23 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     gap: 10,
+    flexShrink: 0,
   },
-  logoIcon: {
-    fontSize: "1.5rem",
+  logoIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    background: "var(--gradient-primary)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "white",
+    flexShrink: 0,
   },
   logoText: {
     fontSize: "1.25rem",
     fontWeight: 700,
-    background: "linear-gradient(135deg, #00d4ff, #8b5cf6)",
+    background: "linear-gradient(135deg, var(--accent-cyan), var(--accent-purple))",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
   },
@@ -238,7 +278,7 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: "-0.02em",
   },
   gradientText: {
-    background: "linear-gradient(135deg, #00d4ff 0%, #6366f1 50%, #8b5cf6 100%)",
+    background: "var(--gradient-primary)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
   },
@@ -278,8 +318,13 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: "center" as const,
   },
   featureIcon: {
-    fontSize: "2.2rem",
-    marginBottom: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    margin: "0 auto 16px",
   },
   featureTitle: {
     fontSize: "1.1rem",
@@ -303,7 +348,7 @@ const styles: Record<string, React.CSSProperties> = {
   statValue: {
     fontSize: "2.5rem",
     fontWeight: 800,
-    background: "linear-gradient(135deg, #00d4ff, #6366f1)",
+    background: "var(--gradient-primary)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
   },

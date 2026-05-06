@@ -3,6 +3,19 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { predictAPI } from "@/lib/api";
+import {
+  Sparkles,
+  ArrowRight,
+  AlertCircle,
+  Lightbulb,
+  Link2,
+  BarChart3,
+  Filter,
+  Bot,
+  CheckCircle2,
+  Loader2,
+  ClipboardPaste,
+} from "lucide-react";
 
 export default function PredictPage() {
   const router = useRouter();
@@ -65,7 +78,10 @@ export default function PredictPage() {
   return (
     <div>
       <div className="animate-fade-in-up">
-        <h1 style={styles.title}>🔮 New Price Prediction</h1>
+        <h1 className="predict-title" style={styles.title}>
+          <Sparkles size={24} style={{ marginRight: 10, verticalAlign: "middle" }} />
+          New Price Prediction
+        </h1>
         <p style={styles.subtitle}>
           Paste an Amazon product URL and our AI will forecast the price for the next 30 days.
         </p>
@@ -74,19 +90,17 @@ export default function PredictPage() {
       {step === "input" ? (
         <div className="animate-fade-in-up stagger-1">
           {/* URL Input Card */}
-          <div className="glass-card-static" style={styles.formCard}>
+          <div className="glass-card-static predict-form-card" style={styles.formCard}>
             {error && (
               <div style={styles.errorBox}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
+                <AlertCircle size={16} color="#ef4444" />
                 {error}
               </div>
             )}
 
             <form onSubmit={handleSubmit} style={styles.form}>
               <label className="input-label" htmlFor="amazon-url">Amazon Product URL</label>
-              <div style={styles.inputRow}>
+              <div className="predict-input-row" style={styles.inputRow}>
                 <input
                   id="amazon-url"
                   type="url"
@@ -98,22 +112,40 @@ export default function PredictPage() {
                   style={{ flex: 1 }}
                 />
                 <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      if (text) setUrl(text);
+                    } catch {
+                      // Clipboard permission denied — ignore
+                    }
+                  }}
+                  style={styles.pasteBtn}
+                  title="Paste from clipboard"
+                >
+                  <ClipboardPaste size={18} />
+                  Paste
+                </button>
+                <button
                   type="submit"
-                  className="btn-primary"
+                  className="btn-primary predict-btn"
                   disabled={loading || !url}
                   style={styles.predictBtn}
                 >
                   Predict
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 6 }}>
-                    <path d="m5 12h14" /><path d="m12 5 7 7-7 7" />
-                  </svg>
+                  <ArrowRight size={18} style={{ marginLeft: 6 }} />
                 </button>
               </div>
             </form>
 
             {/* Tips */}
-            <div style={styles.tips}>
-              <h3 style={styles.tipsTitle}>💡 Tips</h3>
+            <div className="predict-tips" style={styles.tips}>
+              <h3 style={styles.tipsTitle}>
+                <Lightbulb size={16} style={{ marginRight: 6, verticalAlign: "middle" }} />
+                Tips
+              </h3>
               <ul style={styles.tipsList}>
                 <li>Paste the full Amazon product URL (e.g., https://www.amazon.in/dp/B0XXXXXXXXXX)</li>
                 <li>The product must have historical price data in our database</li>
@@ -126,15 +158,17 @@ export default function PredictPage() {
           {/* How it works */}
           <div style={styles.howItWorks}>
             <h2 style={styles.howTitle}>How It Works</h2>
-            <div style={styles.stepsGrid}>
+            <div className="predict-steps-grid" style={styles.stepsGrid}>
               {[
-                { icon: "🔗", title: "1. Paste URL", desc: "We extract the unique ASIN identifier from the Amazon product page." },
-                { icon: "📊", title: "2. Fetch Data", desc: "Historical price data is pulled from our MySQL database." },
-                { icon: "🧹", title: "3. Preprocess", desc: "Data is cleaned — outliers removed, gaps filled, noise smoothed." },
-                { icon: "🤖", title: "4. AI Forecast", desc: "Facebook Prophet model predicts the next 30 days with confidence intervals." },
+                { icon: <Link2 size={24} />, title: "1. Paste URL", desc: "We extract the unique ASIN identifier from the Amazon product page.", color: "var(--accent-cyan)", bg: "rgba(0,212,255,0.1)" },
+                { icon: <BarChart3 size={24} />, title: "2. Fetch Data", desc: "Historical price data is pulled from our MySQL database.", color: "var(--accent-blue)", bg: "rgba(59,130,246,0.1)" },
+                { icon: <Filter size={24} />, title: "3. Preprocess", desc: "Data is cleaned — outliers removed, gaps filled, noise smoothed.", color: "var(--accent-purple)", bg: "rgba(139,92,246,0.1)" },
+                { icon: <Bot size={24} />, title: "4. AI Forecast", desc: "Facebook Prophet model predicts the next 30 days with confidence intervals.", color: "var(--accent-green)", bg: "rgba(16,185,129,0.1)" },
               ].map((s, i) => (
-                <div key={i} className="glass-card" style={styles.stepCard}>
-                  <div style={styles.stepIcon}>{s.icon}</div>
+                <div key={i} className="glass-card predict-step-card" style={styles.stepCard}>
+                  <div style={{ ...styles.stepIcon, background: s.bg, color: s.color }}>
+                    {s.icon}
+                  </div>
                   <h3 style={styles.stepTitle}>{s.title}</h3>
                   <p style={styles.stepDesc}>{s.desc}</p>
                 </div>
@@ -145,7 +179,7 @@ export default function PredictPage() {
       ) : (
         /* Processing State */
         <div className="animate-fade-in-up" style={styles.processingCard}>
-          <div className="glass-card-static" style={styles.processingInner}>
+          <div className="glass-card-static processing-inner" style={styles.processingInner}>
             <div style={styles.processingIcon}>
               <div className="spinner" style={{ width: 48, height: 48, borderWidth: 4 }} />
             </div>
@@ -166,7 +200,11 @@ export default function PredictPage() {
                         : {}),
                     }}
                   >
-                    {i < progress ? "✓" : i === progress ? "⋯" : ""}
+                    {i < progress ? (
+                      <CheckCircle2 size={14} />
+                    ) : i === progress ? (
+                      <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
+                    ) : null}
                   </div>
                   <span
                     style={{
@@ -201,6 +239,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "1.75rem",
     fontWeight: 700,
     marginBottom: 8,
+    display: "inline-flex",
+    alignItems: "center",
   },
   subtitle: {
     color: "var(--text-secondary)",
@@ -229,6 +269,15 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 12,
     flexWrap: "wrap" as const,
   },
+  pasteBtn: {
+    padding: "14px 20px",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    whiteSpace: "nowrap" as const,
+    flexShrink: 0,
+    fontSize: "0.9rem",
+  },
   predictBtn: {
     padding: "14px 32px",
     display: "inline-flex",
@@ -248,6 +297,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     marginBottom: 12,
     color: "var(--accent-amber)",
+    display: "inline-flex",
+    alignItems: "center",
   },
   tipsList: {
     listStyle: "none",
@@ -277,8 +328,13 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: "center" as const,
   },
   stepIcon: {
-    fontSize: "2rem",
-    marginBottom: 12,
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    margin: "0 auto 12px",
   },
   stepTitle: {
     fontSize: "1rem",
@@ -341,6 +397,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "0.65rem",
     flexShrink: 0,
     transition: "all 0.3s",
+    color: "var(--text-muted)",
   },
   stepDotDone: {
     background: "var(--gradient-success)",

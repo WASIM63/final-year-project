@@ -4,6 +4,17 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { predictAPI } from "@/lib/api";
 import dynamic from "next/dynamic";
+import {
+  ChevronLeft,
+  BadgeDollarSign,
+  TrendingDown,
+  TrendingUp,
+  Ruler,
+  Triangle,
+  BarChart3,
+  Calendar,
+  Award,
+} from "lucide-react";
 
 // Lazy load Recharts to avoid SSR issues
 const ForecastChart = dynamic(() => import("@/components/ForecastChart"), { ssr: false });
@@ -60,11 +71,11 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
   if (loading) {
     return (
       <div>
-        <div className="skeleton" style={{ height: 40, width: 300, marginBottom: 24 }} />
-        <div className="skeleton" style={{ height: 400, marginBottom: 24 }} />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+        <div className="skeleton" style={{ height: 40, width: "60%", maxWidth: 300, marginBottom: 24 }} />
+        <div className="skeleton" style={{ height: 300, marginBottom: 24, borderRadius: 16 }} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
           {[1, 2, 3].map((i) => (
-            <div key={i} className="skeleton" style={{ height: 120 }} />
+            <div key={i} className="skeleton" style={{ height: 100, borderRadius: 12 }} />
           ))}
         </div>
       </div>
@@ -73,10 +84,14 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
 
   if (error || !prediction) {
     return (
-      <div className="glass-card-static" style={{ padding: 48, textAlign: "center" }}>
-        <div style={{ fontSize: "3rem", marginBottom: 16 }}>⚠️</div>
-        <h2 style={{ marginBottom: 8 }}>Prediction Not Found</h2>
-        <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>{error || "This prediction does not exist."}</p>
+      <div className="glass-card-static" style={{ padding: "40px 20px", textAlign: "center" }}>
+        <div style={{ marginBottom: 16, display: "flex", justifyContent: "center" }}>
+          <div style={{ width: 56, height: 56, borderRadius: 14, background: "rgba(239,68,68,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Triangle size={28} color="var(--accent-red)" />
+          </div>
+        </div>
+        <h2 style={{ marginBottom: 8, fontSize: "1.2rem" }}>Prediction Not Found</h2>
+        <p style={{ color: "var(--text-muted)", marginBottom: 24, fontSize: "0.9rem" }}>{error || "This prediction does not exist."}</p>
         <button className="btn-primary" onClick={() => router.push("/dashboard")}>
           Back to Dashboard
         </button>
@@ -94,13 +109,11 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
       {/* Header */}
       <div className="animate-fade-in-up" style={styles.header}>
         <button onClick={() => router.push("/dashboard")} style={styles.backBtn}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m15 18-6-6 6-6" />
-          </svg>
+          <ChevronLeft size={18} />
           Back
         </button>
         <div style={styles.headerInfo}>
-          <h1 style={styles.pageTitle}>
+          <h1 className="detail-page-title" style={styles.pageTitle}>
             Prediction Results
             <span style={styles.asinBadge}>{prediction.asin}</span>
           </h1>
@@ -118,12 +131,14 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       {/* Key metrics row */}
-      <div className="animate-fade-in-up stagger-1" style={styles.metricsRow}>
+      <div className="animate-fade-in-up stagger-1 detail-metrics-row" style={styles.metricsRow}>
         {/* Best Buy Day */}
-        <div className="glass-card-static" style={{ ...styles.metricCard, borderColor: "rgba(16,185,129,0.3)" }}>
-          <div style={{ ...styles.metricIcon, background: "rgba(16,185,129,0.12)" }}>💰</div>
+        <div className="glass-card-static detail-metric-card" style={{ ...styles.metricCard, borderColor: "rgba(16,185,129,0.3)" }}>
+          <div style={{ ...styles.metricIcon, background: "rgba(16,185,129,0.12)", color: "var(--accent-green)" }}>
+            <BadgeDollarSign size={22} />
+          </div>
           <div style={styles.metricLabel}>Best Day to Buy</div>
-          <div style={{ ...styles.metricValue, color: "var(--accent-green)" }}>
+          <div className="detail-metric-value" style={{ ...styles.metricValue, color: "var(--accent-green)" }}>
             {new Date(prediction.best_day_date).toLocaleDateString("en-IN", {
               day: "numeric",
               month: "short",
@@ -135,7 +150,7 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
 
         {/* Trend */}
         <div
-          className="glass-card-static"
+          className="glass-card-static detail-metric-card"
           style={{
             ...styles.metricCard,
             borderColor:
@@ -151,12 +166,17 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
                 prediction.trend === "decreasing"
                   ? "rgba(16,185,129,0.12)"
                   : "rgba(239,68,68,0.12)",
+              color:
+                prediction.trend === "decreasing"
+                  ? "var(--accent-green)"
+                  : "var(--accent-red)",
             }}
           >
-            {prediction.trend === "decreasing" ? "📉" : "📈"}
+            {prediction.trend === "decreasing" ? <TrendingDown size={22} /> : <TrendingUp size={22} />}
           </div>
           <div style={styles.metricLabel}>Price Trend</div>
           <div
+            className="detail-metric-value"
             style={{
               ...styles.metricValue,
               color:
@@ -175,20 +195,24 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         {/* MAE */}
-        <div className="glass-card-static" style={{ ...styles.metricCard, borderColor: "rgba(99,102,241,0.3)" }}>
-          <div style={{ ...styles.metricIcon, background: "rgba(99,102,241,0.12)" }}>📏</div>
+        <div className="glass-card-static detail-metric-card" style={{ ...styles.metricCard, borderColor: "rgba(99,102,241,0.3)" }}>
+          <div style={{ ...styles.metricIcon, background: "rgba(99,102,241,0.12)", color: "var(--accent-indigo)" }}>
+            <Ruler size={22} />
+          </div>
           <div style={styles.metricLabel}>MAE (Error)</div>
-          <div style={{ ...styles.metricValue, color: "var(--accent-indigo)" }}>
+          <div className="detail-metric-value" style={{ ...styles.metricValue, color: "var(--accent-indigo)" }}>
             ₹{prediction.mae.toFixed(2)}
           </div>
           <div style={styles.metricSub}>Mean Absolute Error</div>
         </div>
 
         {/* RMSE */}
-        <div className="glass-card-static" style={{ ...styles.metricCard, borderColor: "rgba(139,92,246,0.3)" }}>
-          <div style={{ ...styles.metricIcon, background: "rgba(139,92,246,0.12)" }}>📐</div>
+        <div className="glass-card-static detail-metric-card" style={{ ...styles.metricCard, borderColor: "rgba(139,92,246,0.3)" }}>
+          <div style={{ ...styles.metricIcon, background: "rgba(139,92,246,0.12)", color: "var(--accent-purple)" }}>
+            <Triangle size={22} />
+          </div>
           <div style={styles.metricLabel}>RMSE (Error)</div>
-          <div style={{ ...styles.metricValue, color: "var(--accent-purple)" }}>
+          <div className="detail-metric-value" style={{ ...styles.metricValue, color: "var(--accent-purple)" }}>
             ₹{prediction.rmse.toFixed(2)}
           </div>
           <div style={styles.metricSub}>Root Mean Squared Error</div>
@@ -196,10 +220,13 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       {/* Chart */}
-      <div className="animate-fade-in-up stagger-2 glass-card-static" style={styles.chartCard}>
-        <h2 style={styles.chartTitle}>📊 Price Forecast Chart</h2>
+      <div className="animate-fade-in-up stagger-2 glass-card-static detail-chart-card" style={styles.chartCard}>
+        <h2 className="detail-section-title" style={styles.chartTitle}>
+          <BarChart3 size={20} style={{ marginRight: 8, verticalAlign: "middle" }} />
+          Price Forecast Chart
+        </h2>
         <p style={styles.chartSub}>Historical prices (blue) vs AI-predicted prices (cyan)</p>
-        <div style={styles.chartWrap}>
+        <div className="detail-chart-wrap" style={styles.chartWrap}>
           <ForecastChart
             historical={prediction.historical_data}
             forecast={prediction.forecast_data}
@@ -209,16 +236,19 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
 
       {/* Historical stats */}
       <div className="animate-fade-in-up stagger-3" style={styles.statsSection}>
-        <h2 style={styles.sectionTitle}>📈 Historical Price Statistics</h2>
-        <div style={styles.statsGrid}>
+        <h2 className="detail-section-title" style={styles.sectionTitle}>
+          <TrendingUp size={20} style={{ marginRight: 8, verticalAlign: "middle" }} />
+          Historical Price Statistics
+        </h2>
+        <div className="detail-stats-grid" style={styles.statsGrid}>
           {[
             { label: "Average Price", value: `₹${avgPrice.toFixed(2)}`, color: "var(--accent-cyan)" },
             { label: "Highest Price", value: `₹${maxPrice.toFixed(2)}`, color: "var(--accent-red)" },
             { label: "Lowest Price", value: `₹${minPrice.toFixed(2)}`, color: "var(--accent-green)" },
             { label: "Data Points", value: `${prediction.historical_data.length} days`, color: "var(--accent-amber)" },
           ].map((s, i) => (
-            <div key={i} className="glass-card" style={styles.smallStat}>
-              <div style={{ ...styles.smallStatValue, color: s.color }}>{s.value}</div>
+            <div key={i} className="glass-card detail-small-stat" style={styles.smallStat}>
+              <div className="detail-small-stat-value" style={{ ...styles.smallStatValue, color: s.color }}>{s.value}</div>
               <div style={styles.smallStatLabel}>{s.label}</div>
             </div>
           ))}
@@ -226,15 +256,18 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       {/* Forecast table */}
-      <div className="animate-fade-in-up stagger-4 glass-card-static" style={styles.tableCard}>
-        <h2 style={styles.sectionTitle}>📅 30-Day Forecast Data</h2>
+      <div className="animate-fade-in-up stagger-4 glass-card-static detail-table-card" style={styles.tableCard}>
+        <h2 className="detail-section-title" style={styles.sectionTitle}>
+          <Calendar size={20} style={{ marginRight: 8, verticalAlign: "middle" }} />
+          30-Day Forecast Data
+        </h2>
         <div style={styles.tableWrap}>
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.th}>Date</th>
-                <th style={styles.th}>Predicted Price</th>
-                <th style={styles.th}>Status</th>
+                <th className="detail-th" style={styles.th}>Date</th>
+                <th className="detail-th" style={styles.th}>Predicted Price</th>
+                <th className="detail-th" style={styles.th}>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -248,17 +281,20 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
                       ...(isBest ? styles.trBest : {}),
                     }}
                   >
-                    <td style={styles.td}>
+                    <td className="detail-td" style={styles.td}>
                       {new Date(row.date).toLocaleDateString("en-IN", {
                         weekday: "short",
                         day: "numeric",
                         month: "short",
                       })}
                     </td>
-                    <td style={{ ...styles.td, fontWeight: 600 }}>₹{row.price.toLocaleString()}</td>
-                    <td style={styles.td}>
+                    <td className="detail-td" style={{ ...styles.td, fontWeight: 600 }}>₹{row.price.toLocaleString()}</td>
+                    <td className="detail-td" style={styles.td}>
                       {isBest && (
-                        <span style={styles.bestBadge}>⭐ Best Day</span>
+                        <span style={styles.bestBadge}>
+                          <Award size={14} style={{ marginRight: 4 }} />
+                          Best Day
+                        </span>
                       )}
                     </td>
                   </tr>
@@ -279,7 +315,7 @@ const styles: Record<string, React.CSSProperties> = {
   backBtn: {
     display: "inline-flex",
     alignItems: "center",
-    gap: 6,
+    gap: 4,
     background: "none",
     border: "none",
     color: "var(--text-secondary)",
@@ -333,7 +369,6 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "1.3rem",
     margin: "0 auto 12px",
   },
   metricLabel: {
@@ -360,6 +395,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "1.15rem",
     fontWeight: 600,
     marginBottom: 4,
+    display: "inline-flex",
+    alignItems: "center",
   },
   chartSub: {
     fontSize: "0.85rem",
@@ -377,6 +414,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "1.15rem",
     fontWeight: 600,
     marginBottom: 16,
+    display: "inline-flex",
+    alignItems: "center",
   },
   statsGrid: {
     display: "grid",
@@ -436,5 +475,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "4px 10px",
     fontSize: "0.78rem",
     fontWeight: 600,
+    display: "inline-flex",
+    alignItems: "center",
   },
 };

@@ -4,6 +4,12 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import {
+  Rocket,
+  AlertCircle,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -45,20 +51,20 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="glass-card-static animate-fade-in-up" style={styles.card}>
+    <div className="glass-card-static animate-fade-in-up auth-card" style={styles.card}>
       {/* Logo */}
       <div style={styles.logoSection}>
-        <div style={styles.logoIcon}>🚀</div>
-        <h1 style={styles.title}>Create Account</h1>
+        <div className="auth-logo-icon" style={styles.logoIcon}>
+          <Rocket size={28} strokeWidth={2} />
+        </div>
+        <h1 className="auth-title" style={styles.title}>Create Account</h1>
         <p style={styles.subtitle}>Start predicting Amazon prices with AI</p>
       </div>
 
       {/* Error */}
       {error && (
         <div style={styles.errorBox}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
+          <AlertCircle size={16} color="#ef4444" />
           {error}
         </div>
       )}
@@ -71,7 +77,7 @@ export default function RegisterPage() {
             id="reg-name"
             type="text"
             className="input-field"
-            placeholder="Biswajit Adak"
+            placeholder="Enter Your Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -84,7 +90,7 @@ export default function RegisterPage() {
             id="reg-email"
             type="email"
             className="input-field"
-            placeholder="you@example.com"
+            placeholder="Enter Your Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -111,7 +117,7 @@ export default function RegisterPage() {
               style={styles.eyeBtn}
               aria-label="Toggle password visibility"
             >
-              {showPassword ? "🙈" : "👁️"}
+              {showPassword ? <EyeOff size={18} color="var(--text-muted)" /> : <Eye size={18} color="var(--text-muted)" />}
             </button>
           </div>
         </div>
@@ -169,8 +175,15 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 28,
   },
   logoIcon: {
-    fontSize: "2.5rem",
-    marginBottom: 14,
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    background: "var(--gradient-secondary)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "white",
+    margin: "0 auto 14px",
   },
   title: {
     fontSize: "1.75rem",
@@ -209,8 +222,9 @@ const styles: Record<string, React.CSSProperties> = {
     background: "none",
     border: "none",
     cursor: "pointer",
-    fontSize: "1rem",
-    lineHeight: 1,
+    display: "flex",
+    alignItems: "center",
+    padding: 2,
   },
   submitBtn: {
     width: "100%",
