@@ -46,6 +46,7 @@ def init_db():
             trend VARCHAR(20),
             mae DECIMAL(12, 4),
             rmse DECIMAL(12, 4),
+            data_source VARCHAR(20) DEFAULT 'database',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
@@ -64,6 +65,14 @@ def init_db():
         cursor.execute("""
             ALTER TABLE predictions
             ADD COLUMN product_image_url TEXT AFTER product_title
+        """)
+    except Exception:
+        pass  # Column already exists
+
+    try:
+        cursor.execute("""
+            ALTER TABLE predictions
+            ADD COLUMN data_source VARCHAR(20) DEFAULT 'database' AFTER rmse
         """)
     except Exception:
         pass  # Column already exists

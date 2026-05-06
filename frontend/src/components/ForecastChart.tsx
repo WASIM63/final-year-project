@@ -16,6 +16,8 @@ import {
 interface DataPoint {
   date: string;
   price: number;
+  price_lower?: number;
+  price_upper?: number;
 }
 
 interface ForecastChartProps {
@@ -26,12 +28,18 @@ interface ForecastChartProps {
 export default function ForecastChart({ historical, forecast }: ForecastChartProps) {
   const { theme } = useTheme();
 
+  // Check if we have confidence interval data
+  const hasCI = forecast.some((d) => d.price_lower != null && d.price_upper != null);
+
   // Merge historical and forecast into a single dataset
   const chartData = [
     ...historical.map((d) => ({
       date: d.date,
       historical: d.price,
       forecast: null as number | null,
+      ci_lower: null as number | null,
+      ci_upper: null as number | null,
+      ci_range: null as [number, number] | null,
     })),
     // Add overlap point for continuity
     ...(historical.length > 0
@@ -40,6 +48,11 @@ export default function ForecastChart({ historical, forecast }: ForecastChartPro
             date: historical[historical.length - 1].date,
             historical: historical[historical.length - 1].price,
             forecast: forecast.length > 0 ? forecast[0].price : null,
+            ci_lower: hasCI && forecast.length > 0 ? forecast[0].price_lower ?? null : null,
+            ci_upper: hasCI && forecast.length > 0 ? forecast[0].price_upper ?? null : null,
+            ci_range: hasCI && forecast.length > 0
+              ? [forecast[0].price_lower ?? 0, forecast[0].price_upper ?? 0] as [number, number]
+              : null,
           },
         ]
       : []),
@@ -47,6 +60,9 @@ export default function ForecastChart({ historical, forecast }: ForecastChartPro
       date: d.date,
       historical: null as number | null,
       forecast: d.price,
+      ci_lower: hasCI ? (d.price_lower ?? null) : null,
+      ci_upper: hasCI ? (d.price_upper ?? null) : null,
+      ci_range: hasCI ? [d.price_lower ?? 0, d.price_upper ?? 0] as [number, number] : null,
     })),
   ];
 
@@ -67,6 +83,7 @@ export default function ForecastChart({ historical, forecast }: ForecastChartPro
 
   const historicalColor = isDark ? "#3b82f6" : "#2563eb";
   const forecastColor = isDark ? "#00d4ff" : "#0891b2";
+  const ciColor = isDark ? "rgba(0, 212, 255, 0.1)" : "rgba(8, 145, 178, 0.08)";
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -116,18 +133,50 @@ export default function ForecastChart({ historical, forecast }: ForecastChartPro
           itemStyle={{ fontSize: "0.9rem" }}
           labelFormatter={(label: React.ReactNode) => formatDate(String(label))}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          formatter={(value: any, name: any) => [
-            formatPrice(Number(value)),
-            name === "historical" ? "Historical Price" : "Forecast Price",
-          ]}
+          formatter={(value: any, name: any) => {
+            if (name === "ci_range" || name === "ci_lower" || name === "ci_upper") {
+              return [null, null]; // hide CI from tooltip
+            }
+            const label = name === "historical" ? "Historical Price" : "Forecast Price";
+            return [formatPrice(Number(value)), label];
+          }}
         />
 
         <Legend
           wrapperStyle={{ paddingTop: 16, fontSize: "0.85rem" }}
-          formatter={(value: string) =>
-            value === "historical" ? "Historical Price" : "Forecast Price"
-          }
+          formatter={(value: string) => {
+            if (value === "historical") return "Historical Price";
+            if (value === "forecast") return "Forecast Price";
+            if (value === "ci_upper") return "90% Confidence Band";
+            return "";
+          }}
         />
+
+        {/* Confidence interval band (rendered behind forecast line) */}
+        {hasCI && (
+          <Area
+            type="monotone"
+            dataKey="ci_upper"
+            stroke="none"
+            fill={ciColor}
+            dot={false}
+            activeDot={false}
+            connectNulls={false}
+            legendType="none"
+          />
+        )}
+        {hasCI && (
+          <Area
+            type="monotone"
+            dataKey="ci_lower"
+            stroke="none"
+            fill={isDark ? "#0a1128" : "#ffffff"}
+            dot={false}
+            activeDot={false}
+            connectNulls={false}
+            legendType="none"
+          />
+        )}
 
         <Area
           type="monotone"

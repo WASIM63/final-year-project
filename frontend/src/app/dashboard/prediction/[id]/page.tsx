@@ -15,6 +15,9 @@ import {
   Calendar,
   Award,
   Package,
+  Database,
+  Cloud,
+  Sparkles,
 } from "lucide-react";
 
 // Lazy load Recharts to avoid SSR issues
@@ -23,6 +26,8 @@ const ForecastChart = dynamic(() => import("@/components/ForecastChart"), { ssr:
 interface ForecastPoint {
   date: string;
   price: number;
+  price_lower?: number;
+  price_upper?: number;
 }
 
 interface PredictionDetail {
@@ -38,6 +43,7 @@ interface PredictionDetail {
   trend: string;
   mae: number;
   rmse: number;
+  data_source: string | null;
   created_at: string;
 }
 
@@ -61,7 +67,12 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
           p.historical_data = p.historical_data.map((d: ForecastPoint) => ({ ...d, price: parseFloat(d.price as unknown as string) || 0 }));
         }
         if (p.forecast_data) {
-          p.forecast_data = p.forecast_data.map((d: ForecastPoint) => ({ ...d, price: parseFloat(d.price as unknown as string) || 0 }));
+          p.forecast_data = p.forecast_data.map((d: ForecastPoint) => ({
+            ...d,
+            price: parseFloat(d.price as unknown as string) || 0,
+            price_lower: d.price_lower != null ? parseFloat(d.price_lower as unknown as string) || 0 : undefined,
+            price_upper: d.price_upper != null ? parseFloat(d.price_upper as unknown as string) || 0 : undefined,
+          }));
         }
         setPrediction(p);
       })
@@ -152,6 +163,35 @@ export default function PredictionDetailPage({ params }: { params: Promise<{ id:
                 <Package size={14} style={{ marginRight: 4, verticalAlign: "middle" }} />
                 Product details could not be fetched from Amazon
               </p>
+            )}
+            {prediction.data_source && (
+              <div style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                marginTop: 8,
+                padding: "4px 12px",
+                borderRadius: 8,
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                background: prediction.data_source === "scraped"
+                  ? "rgba(245,158,11,0.12)"
+                  : prediction.data_source === "mixed"
+                  ? "rgba(139,92,246,0.12)"
+                  : "rgba(16,185,129,0.12)",
+                color: prediction.data_source === "scraped"
+                  ? "var(--accent-amber)"
+                  : prediction.data_source === "mixed"
+                  ? "var(--accent-purple)"
+                  : "var(--accent-green)",
+              }}>
+                {prediction.data_source === "scraped" ? <Cloud size={13} /> :
+                 prediction.data_source === "mixed" ? <Sparkles size={13} /> :
+                 <Database size={13} />}
+                {prediction.data_source === "scraped" ? "Live Scraped" :
+                 prediction.data_source === "mixed" ? "DB + Live Data" :
+                 "Database"}
+              </div>
             )}
           </div>
         </div>
