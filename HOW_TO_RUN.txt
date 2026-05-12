@@ -1,0 +1,199 @@
+==============================================================
+   AMAZON PRODUCT PRICE FORECAST - FULL STACK APPLICATION
+   How to Run - Backend (Flask) & Frontend (Next.js 16)
+==============================================================
+
+PREREQUISITES
+--------------
+1. Python 3.10+ installed
+2. Node.js 18+ installed (with npm)
+3. MySQL Server running locally
+4. MySQL database "amazon_scraping" with "amazon_products" table
+   (containing columns: ASIN, scrape_date, price)
+
+
+==============================================================
+   STEP 1: RUN THE BACKEND (Flask API - Port 5000)
+==============================================================
+
+Open Terminal 1 (Command Prompt / PowerShell):
+
+   cd d:\Amazon-Product-Price-Forecast\backend
+
+1. Create a Python virtual environment (first time only):
+
+   python -m venv venv
+
+2. Activate the virtual environment:
+
+   Windows CMD:      venv\Scripts\activate
+   Windows PowerShell: .\venv\Scripts\Activate.ps1
+   Linux/Mac:        source venv/bin/activate
+
+3. Install Python dependencies (first time only):
+
+   pip install -r requirements.txt
+
+4. Configure environment variables:
+
+   Open backend\.env and update if needed:
+   - DB_HOST=localhost
+   - DB_USER=root
+   - DB_PASSWORD=7822        <-- Change to your MySQL password
+   - DB_NAME=amazon_scraping
+   - JWT_SECRET_KEY=amazon_forecast_super_secret_key_2026
+
+5. Start the Flask server:
+
+   python app.py
+
+   You should see:
+   ✅ Database tables initialized successfully.
+   * Running on http://0.0.0.0:5000
+
+   The "users" and "predictions" tables are auto-created on startup.
+
+6. Test the API is running:
+
+   Open browser: http://localhost:5000/api/health
+   Expected: {"message":"Amazon Price Forecast API is running","status":"ok"}
+
+
+==============================================================
+   STEP 2: RUN THE FRONTEND (Next.js 16 - Port 3000)
+==============================================================
+
+Open Terminal 2 (keep backend running in Terminal 1):
+
+   cd d:\Amazon-Product-Price-Forecast\frontend
+
+1. Install Node.js dependencies (first time only):
+
+   npm install
+
+2. Start the Next.js development server:
+
+   npm run dev
+
+   You should see:
+   ▲ Next.js 16.2.4 (Turbopack)
+   - Local: http://localhost:3000
+   ✓ Ready in ~1s
+
+3. Open in browser:
+
+   http://localhost:3000
+
+
+==============================================================
+   HOW TO USE THE APPLICATION
+==============================================================
+
+1. REGISTER
+   - Go to http://localhost:3000/register
+   - Enter your Name, Email, and Password
+   - Click "Create Account"
+
+2. LOGIN
+   - Go to http://localhost:3000/login
+   - Enter Email and Password
+   - Click "Sign In"
+
+3. MAKE A PREDICTION
+   - After login, click "New Prediction" or go to Dashboard > Predict
+   - Paste an Amazon product URL
+     Example: https://www.amazon.in/dp/B0XXXXXXXXXX
+   - Click "Predict"
+   - Wait ~10-20 seconds for the AI model to train and forecast
+   - View the results: 30-day forecast chart, best buy day,
+     trend analysis, and model accuracy (MAE/RMSE)
+
+4. VIEW HISTORY
+   - Go to Dashboard > History
+   - See all your past predictions
+   - Click any prediction to view full details with charts
+   - Delete predictions you no longer need
+
+
+==============================================================
+   API ENDPOINTS REFERENCE
+==============================================================
+
+BASE URL: http://localhost:5000/api
+
+AUTH:
+  POST   /auth/register    - Register (name, email, password)
+  POST   /auth/login       - Login (email, password) → JWT token
+  GET    /auth/me          - Get current user profile (protected)
+
+PREDICTIONS:
+  POST   /predict          - Run ML prediction on Amazon URL (protected)
+  GET    /predictions      - List all user predictions (protected)
+  GET    /predictions/:id  - Get single prediction detail (protected)
+  DELETE /predictions/:id  - Delete a prediction (protected)
+
+HEALTH:
+  GET    /health           - API health check
+
+
+==============================================================
+   TECH STACK
+==============================================================
+
+Backend:
+  - Flask 3.1.1 (Python web framework)
+  - Flask-JWT-Extended (JWT authentication)
+  - Flask-CORS (Cross-origin support)
+  - PyMySQL (MySQL database driver)
+  - Facebook Prophet (Time-series ML model)
+  - scikit-learn (Model evaluation metrics)
+  - bcrypt (Password hashing)
+
+Frontend:
+  - Next.js 16.2.4 (React framework)
+  - TypeScript (Type-safe JavaScript)
+  - Tailwind CSS (Utility-first CSS)
+  - Recharts (Interactive data visualization)
+  - Axios (HTTP client)
+
+Database:
+  - MySQL (amazon_scraping database)
+
+
+==============================================================
+   TROUBLESHOOTING
+==============================================================
+
+1. "Port 5000 already in use"
+   → Kill the process: netstat -ano | findstr :5000
+     Then: taskkill /PID <PID> /F
+
+2. "Port 3000 already in use"
+   → Kill the process: taskkill /PID <PID> /F
+   → Or Next.js will auto-use port 3001
+
+3. "MySQL connection refused"
+   → Make sure MySQL server is running
+   → Check credentials in backend\.env
+
+4. "No price data found for ASIN"
+   → The product must exist in your amazon_products table
+   → Check that the ASIN has scrape_date and price data
+
+5. "Module not found" (Python)
+   → Make sure venv is activated
+   → Run: pip install -r requirements.txt
+
+6. "Module not found" (Node.js)
+   → Run: npm install (in frontend folder)
+
+7. Frontend can't connect to backend
+   → Make sure backend is running on port 5000
+   → Check CORS is allowing http://localhost:3000
+
+
+==============================================================
+   AUTHOR: Biswajit Adak
+   PROJECT: Amazon Product Price Forecast
+   VERSION: 2.0 (Full-Stack)
+==============================================================

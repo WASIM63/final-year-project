@@ -1,0 +1,11 @@
+# Virtual environment
+myVenv/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Data / temp files
+*.log
+*.csv
