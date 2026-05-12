@@ -5,6 +5,8 @@ from urllib.parse import quote_plus
 from config import Config
 
 
+
+
 def _get_engine():
     """Create a SQLAlchemy engine for MySQL."""
     password = quote_plus(Config.DB_PASSWORD)
